@@ -2,9 +2,8 @@ package com.smousseur.specification.api.service;
 
 import com.smousseur.specification.api.annotation.SearchPath;
 import com.smousseur.specification.api.criteria.AbstractCriteria;
-import com.smousseur.specification.api.service.config.SearchServiceConfiguration;
-import com.smousseur.specification.api.service.internal.CriteriaSpecificationGenerator;
-import com.smousseur.specification.api.service.internal.SpecificationParser;
+import com.smousseur.specification.api.generator.CriteriaSpecificationGenerator;
+import com.smousseur.specification.api.generator.SpecificationParser;
 import com.smousseur.specification.api.util.Utils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -16,9 +15,9 @@ import org.springframework.util.ReflectionUtils;
 
 /** The type Specification service. */
 public class SpecificationService {
-  private final SearchServiceConfiguration configuration;
+  private final SpecificationServiceConfiguration configuration;
 
-  public SpecificationService(SearchServiceConfiguration configuration) {
+  public SpecificationService(SpecificationServiceConfiguration configuration) {
     this.configuration = configuration;
   }
 

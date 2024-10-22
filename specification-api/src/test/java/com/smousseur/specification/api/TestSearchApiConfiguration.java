@@ -1,8 +1,8 @@
 package com.smousseur.specification.api;
 
 import com.smousseur.specification.api.service.SpecificationService;
+import com.smousseur.specification.api.service.SpecificationServiceConfiguration;
 import com.smousseur.specification.api.service.SpecificationValidationService;
-import com.smousseur.specification.api.service.config.SearchServiceConfiguration;
 import java.util.Properties;
 import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
@@ -61,8 +61,9 @@ public class TestSearchApiConfiguration {
   }
 
   @Bean
-  public SearchServiceConfiguration testApiSearchServiceConfiguration(JdbcTemplate jdbcTemplate) {
-    return new SearchServiceConfiguration(jdbcTemplate) {
+  public SpecificationServiceConfiguration testApiSearchServiceConfiguration(
+      JdbcTemplate jdbcTemplate) {
+    return new SpecificationServiceConfiguration(jdbcTemplate) {
       @Override
       public String[] packagesToScan() {
         return new String[] {"com.smousseur.specification.api.service.model"};
@@ -71,13 +72,15 @@ public class TestSearchApiConfiguration {
   }
 
   @Bean
-  public SpecificationService specificationService(SearchServiceConfiguration configuration) {
+  public SpecificationService specificationService(
+      SpecificationServiceConfiguration configuration) {
     return new SpecificationService(configuration);
   }
 
   @Bean
   public SpecificationValidationService specificationValidationService(
-      ResourceLoader resourceLoader, SearchServiceConfiguration searchServiceConfiguration) {
-    return new SpecificationValidationService(searchServiceConfiguration, resourceLoader);
+      ResourceLoader resourceLoader,
+      SpecificationServiceConfiguration specificationServiceConfiguration) {
+    return new SpecificationValidationService(specificationServiceConfiguration, resourceLoader);
   }
 }

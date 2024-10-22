@@ -8,6 +8,7 @@ package com.smousseur.specification.api.criteria;
 public record CriteriaJsonValue<T>(
     String path,
     String jsonPath,
+    CriteriaJsonColumnType columnType,
     CriteriaValueOperation operation,
     CriteriaValueType type,
     T value,

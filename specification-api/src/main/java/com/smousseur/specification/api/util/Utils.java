@@ -1,5 +1,6 @@
 package com.smousseur.specification.api.util;
 
+import com.smousseur.specification.api.exception.SearchException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.springframework.util.ReflectionUtils;
@@ -27,17 +28,20 @@ public final class Utils {
 
   private static Method getGetterMethod(Class<?> objectClass, String fieldName) {
     String getterName = fieldName;
-    Method getter = org.springframework.util.ReflectionUtils.findMethod(objectClass, getterName);
+    Method getter = ReflectionUtils.findMethod(objectClass, getterName);
     if (getter == null) {
       getterName = getGetterName("get", fieldName);
-      getter = org.springframework.util.ReflectionUtils.findMethod(objectClass, getterName);
+      getter = ReflectionUtils.findMethod(objectClass, getterName);
     }
     if (getter == null) {
       getterName = getGetterName("is", fieldName);
-      getter = org.springframework.util.ReflectionUtils.findMethod(objectClass, getterName);
+      getter = ReflectionUtils.findMethod(objectClass, getterName);
     }
     if (getter == null) {
-      throw new IllegalArgumentException();
+      throw new SearchException(
+          String.format(
+              "Cannot get getter method for field %s and class %s",
+              fieldName, objectClass.getName()));
     }
     return getter;
   }

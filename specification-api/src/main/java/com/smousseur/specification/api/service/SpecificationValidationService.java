@@ -6,7 +6,6 @@ import com.smousseur.specification.api.antlr.ExpressionLexer;
 import com.smousseur.specification.api.antlr.ExpressionParser;
 import com.smousseur.specification.api.exception.ParseException;
 import com.smousseur.specification.api.exception.SearchException;
-import com.smousseur.specification.api.service.config.SearchServiceConfiguration;
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Field;
 import java.util.HashSet;
@@ -27,10 +26,10 @@ public class SpecificationValidationService {
   private final ResourceLoader resourceLoader;
 
   /** The Configuration. */
-  private final SearchServiceConfiguration configuration;
+  private final SpecificationServiceConfiguration configuration;
 
   public SpecificationValidationService(
-      SearchServiceConfiguration configuration, ResourceLoader resourceLoader) {
+      SpecificationServiceConfiguration configuration, ResourceLoader resourceLoader) {
     this.configuration = configuration;
     this.resourceLoader = resourceLoader;
   }

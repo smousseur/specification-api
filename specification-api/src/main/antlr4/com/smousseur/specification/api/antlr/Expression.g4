@@ -25,7 +25,7 @@ objectValue
 
 jsonValue
     : 'json_value(' IDENTIFIER ',' IDENTIFIER ',' valueOperation '(' IDENTIFIER '))'
-    | 'json_value(' IDENTIFIER ',' IDENTIFIER ',' valueOperation '(' IDENTIFIER '),' valueType ')'
+    | 'json_value(' IDENTIFIER ',' IDENTIFIER ',' valueOperation '(' IDENTIFIER '),' valueType (',' jsonOption)? ')'
     ;
 
 valueType
@@ -35,6 +35,11 @@ valueType
     | 'double'
     | 'bool'
     | 'long'
+    ;
+
+jsonOption
+    : 'json'
+    | 'jsonb'
     ;
 
 valueOperation
