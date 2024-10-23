@@ -7,6 +7,8 @@ import com.smousseur.specification.api.criteria.*;
 import com.smousseur.specification.api.criteria.AbstractCriteria;
 import com.smousseur.specification.api.exception.ParseException;
 import com.smousseur.specification.api.util.Wrapper;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,17 +19,12 @@ import org.antlr.v4.runtime.CommonTokenStream;
 /** The type Specification parser service. */
 public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   private final String expression;
-
-  /** The Criterias. */
   private final List<AbstractCriteria> criterias = new ArrayList<>();
-
-  /** The Current operation. */
-  private final Wrapper<String> currentOperation = new Wrapper<>();
-
-  /** The Current value type. */
-  private final Wrapper<String> currentValueType = new Wrapper<>();
-
-  private final Wrapper<String> currentJsonOption = new Wrapper<>();
+  private final Wrapper<CriteriaValueOperation> operation = new Wrapper<>();
+  private final Wrapper<String> valueType = new Wrapper<>();
+  private final Wrapper<String> jsonOption = new Wrapper<>();
+  private final Wrapper<String> valuePath = new Wrapper<>();
+  private final Wrapper<String> jsonValuePath = new Wrapper<>();
 
   public SpecificationParser(String expression) {
     this.expression = expression;
@@ -48,100 +45,95 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   }
 
   @Override
+  public Void visitExpression(ExpressionParser.ExpressionContext ctx) {
+    Void unused = super.visitExpression(ctx);
+    String value = ctx.VALUE().getText();
+    value = value.replace("\"", "");
+    if (jsonValuePath.isEmpty()) {
+      criterias.add(getCriteriaObjectValue(value));
+    } else {
+      criterias.add(getCriteriaJsonValue(value));
+    }
+    return unused;
+  }
+
+  @Override
   public Void visitJoin(ExpressionParser.JoinContext ctx) {
-    criterias.add(new CriteriaNode(ctx.IDENTIFIER().get(0).getText()));
+    criterias.add(new CriteriaJoin(ctx.IDENTIFIER().getText()));
     return super.visitJoin(ctx);
   }
 
   @Override
-  public Void visitObjectValue(ExpressionParser.ObjectValueContext ctx) {
-    Void result = super.visitObjectValue(ctx);
-    CriteriaValueOperation operation =
-        switch (currentOperation.getValue()) {
-          case "eq" -> CriteriaValueOperation.EQUALS;
-          case "like" -> CriteriaValueOperation.LIKE;
-          default -> throw new UnsupportedOperationException("Operation not supported");
-        };
-    String path = ctx.IDENTIFIER().get(0).getText();
-    String value = ctx.IDENTIFIER().get(1).getText();
-    criterias.add(getCriteriaObjectValue(operation, path, value));
-    return result;
+  public Void visitObjectPath(ExpressionParser.ObjectPathContext ctx) {
+    Void unused = super.visitObjectPath(ctx);
+    valuePath.setValue(ctx.IDENTIFIER().getText());
+    return unused;
   }
 
   @Override
-  public Void visitJsonValue(ExpressionParser.JsonValueContext ctx) {
-    Void result = super.visitJsonValue(ctx);
-    CriteriaValueOperation operation =
-        switch (currentOperation.getValue()) {
-          case "eq" -> CriteriaValueOperation.EQUALS;
-          case "like" -> CriteriaValueOperation.LIKE;
-          default -> throw new UnsupportedOperationException("Operation not supported");
-        };
-    String field = ctx.IDENTIFIER().get(0).getText();
-    String path = ctx.IDENTIFIER().get(1).getText();
-    String value = ctx.IDENTIFIER().get(2).getText();
-    criterias.add(getCriteriaJsonValue(operation, field, path, value));
-    return result;
-  }
-
-  @Override
-  public Void visitValueOperation(ExpressionParser.ValueOperationContext ctx) {
-    currentOperation.setValue(ctx.getText());
-    return super.visitValueOperation(ctx);
+  public Void visitJsonPath(ExpressionParser.JsonPathContext ctx) {
+    Void unused = super.visitJsonPath(ctx);
+    valuePath.setValue(ctx.IDENTIFIER(0).getText());
+    jsonValuePath.setValue(ctx.IDENTIFIER(1).getText());
+    return unused;
   }
 
   @Override
   public Void visitValueType(ExpressionParser.ValueTypeContext ctx) {
-    currentValueType.setValue(ctx.getText());
-    return super.visitValueType(ctx);
+    Void unused = super.visitValueType(ctx);
+    valueType.setValue(ctx.getText());
+    return unused;
+  }
+
+  @Override
+  public Void visitOperator(ExpressionParser.OperatorContext ctx) {
+    operation.setValue(CriteriaValueOperation.fromOperator(ctx.getText()));
+    return super.visitOperator(ctx);
   }
 
   @Override
   public Void visitJsonOption(ExpressionParser.JsonOptionContext ctx) {
-    currentJsonOption.setValue(ctx.getText());
+    jsonOption.setValue(ctx.getText());
     return super.visitJsonOption(ctx);
   }
 
-  private CriteriaObjectValue<?> getCriteriaObjectValue(
-      CriteriaValueOperation operation, String path, String value) {
+  private CriteriaObjectValue<?> getCriteriaObjectValue(String value) {
     CriteriaObjectValue<?> result;
-    String valueClass = currentValueType.getValue();
+    String valueClass = valueType.getValue();
 
     if (valueClass != null) {
       result =
           switch (valueClass) {
-            case "string" -> getNewCriteriaObjectValue(path, operation, value, String.class);
-            case "int" ->
-                getNewCriteriaObjectValue(path, operation, Integer.valueOf(value), Integer.class);
-            case "long" ->
-                getNewCriteriaObjectValue(path, operation, Long.valueOf(value), Long.class);
-            case "float" ->
-                getNewCriteriaObjectValue(path, operation, Float.valueOf(value), Float.class);
-            case "double" ->
-                getNewCriteriaObjectValue(path, operation, Double.valueOf(value), Double.class);
-            case "bool" ->
-                getNewCriteriaObjectValue(path, operation, Boolean.valueOf(value), Boolean.class);
+            case "string" -> getNewCriteriaObjectValue(value, String.class);
+            case "int" -> getNewCriteriaObjectValue(Integer.valueOf(value), Integer.class);
+            case "long" -> getNewCriteriaObjectValue(Long.valueOf(value), Long.class);
+            case "float" -> getNewCriteriaObjectValue(Float.valueOf(value), Float.class);
+            case "double" -> getNewCriteriaObjectValue(Double.valueOf(value), Double.class);
+            case "bool" -> getNewCriteriaObjectValue(Boolean.valueOf(value), Boolean.class);
+            case "date" -> getNewCriteriaObjectValue(LocalDate.parse(value), LocalDate.class);
+            case "datetime" ->
+                getNewCriteriaObjectValue(LocalDateTime.parse(value), LocalDateTime.class);
             default -> throw new UnsupportedOperationException("Type not supported");
           };
     } else {
-      result = getNewCriteriaObjectValue(path, operation, value, String.class);
+      result = getNewCriteriaObjectValue(value, String.class);
     }
 
     return result;
   }
 
-  private CriteriaJsonValue<?> getCriteriaJsonValue(
-      CriteriaValueOperation operation, String field, String path, String value) {
+  private CriteriaJsonValue<?> getCriteriaJsonValue(String value) {
     CriteriaJsonValue<?> result;
-    String valueClass = currentValueType.getValue();
+    String valueClass = valueType.getValue();
     CriteriaJsonColumnType columnType = getCriteriaJsonColumnType();
-
+    String path = valuePath.getValue();
+    String jsonPath = jsonValuePath.getValue();
     CriteriaJsonValue<String> stringCriteriaJsonValue =
         new CriteriaJsonValue<>(
-            field,
             path,
+            jsonPath,
             columnType,
-            operation,
+            operation.getValue(),
             CriteriaValueType.JSON_PROPERTY,
             value,
             String.class);
@@ -151,17 +143,19 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
             case "string" -> stringCriteriaJsonValue;
             case "int" ->
                 getNewCriteriaJsonValue(
-                    field, path, operation, Integer.valueOf(value), Integer.class);
+                    path, jsonPath, operation.getValue(), Integer.valueOf(value), Integer.class);
             case "long" ->
-                getNewCriteriaJsonValue(field, path, operation, Long.valueOf(value), Long.class);
+                getNewCriteriaJsonValue(
+                    path, jsonPath, operation.getValue(), Long.valueOf(value), Long.class);
             case "float" ->
-                getNewCriteriaJsonValue(field, path, operation, Float.valueOf(value), Float.class);
+                getNewCriteriaJsonValue(
+                    path, jsonPath, operation.getValue(), Float.valueOf(value), Float.class);
             case "double" ->
                 getNewCriteriaJsonValue(
-                    field, path, operation, Double.valueOf(value), Double.class);
+                    path, jsonPath, operation.getValue(), Double.valueOf(value), Double.class);
             case "bool" ->
                 getNewCriteriaJsonValue(
-                    field, path, operation, Boolean.valueOf(value), Boolean.class);
+                    path, jsonPath, operation.getValue(), Boolean.valueOf(value), Boolean.class);
             default -> throw new UnsupportedOperationException("Type not supported");
           };
     } else {
@@ -179,7 +173,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   }
 
   private CriteriaJsonColumnType getCriteriaJsonColumnType() {
-    return Optional.ofNullable(currentJsonOption.getValue())
+    return Optional.ofNullable(jsonOption.getValue())
         .map(
             val ->
                 switch (val) {
@@ -191,8 +185,8 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
         .orElse(CriteriaJsonColumnType.JSONB);
   }
 
-  private <T> CriteriaObjectValue<T> getNewCriteriaObjectValue(
-      String path, CriteriaValueOperation operation, T value, Class<T> type) {
-    return new CriteriaObjectValue<>(path, operation, CriteriaValueType.PROPERTY, value, type);
+  private <T> CriteriaObjectValue<T> getNewCriteriaObjectValue(T value, Class<T> type) {
+    return new CriteriaObjectValue<>(
+        valuePath.getValue(), operation.getValue(), CriteriaValueType.PROPERTY, value, type);
   }
 }

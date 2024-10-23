@@ -22,4 +22,8 @@ public class Wrapper<T> {
   public void setValue(T value) {
     this.value = value;
   }
+
+  public boolean isEmpty() {
+    return this.value == null;
+  }
 }

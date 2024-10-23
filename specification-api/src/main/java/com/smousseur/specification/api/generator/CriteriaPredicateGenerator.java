@@ -4,12 +4,8 @@ import com.smousseur.specification.api.criteria.CriteriaJsonValue;
 import com.smousseur.specification.api.criteria.CriteriaValue;
 import com.smousseur.specification.api.criteria.CriteriaValueOperation;
 import com.smousseur.specification.api.criteria.CriteriaValueType;
-import com.smousseur.specification.api.exception.SearchException;
-import com.smousseur.specification.api.extractor.DefaultJsonExtractor;
-import com.smousseur.specification.api.extractor.JsonExtractExtractor;
-import com.smousseur.specification.api.extractor.MySqlJsonExtractor;
-import com.smousseur.specification.api.extractor.PostgresJsonExtractor;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Predicate;
 
@@ -35,35 +31,66 @@ public class CriteriaPredicateGenerator<T> {
    *
    * @param <Z> the type parameter
    * @param <X> the type parameter
-   * @param root the root
+   * @param from the from
    * @param criteriaBuilder the criteria builder
    * @return the predicate
    */
-  public <Z, X> Predicate generatePredicate(From<Z, X> root, CriteriaBuilder criteriaBuilder) {
+  public <Z, X> Predicate generatePredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     CriteriaValueOperation operation = criteriaValue.operation();
     return switch (operation) {
-      case EQUALS -> buildEqualPredicate(root, criteriaBuilder);
-      case LIKE -> buildLikePredicate(root, criteriaBuilder);
+      case EQUALS -> buildEqualPredicate(from, criteriaBuilder);
+      case LIKE -> buildLikePredicate(from, criteriaBuilder);
+      case GREATER_THAN -> buildGreaterThanPredicate(from, criteriaBuilder);
+      case LESS_THAN -> buildLessThanPredicate(from, criteriaBuilder);
+      case GREATER_THAN_OR_EQUALS -> buildGreaterThanOrEqualsPredicate(from, criteriaBuilder);
+      case LESS_THAN_OR_EQUALS -> buildLessThanOrEqualsPredicate(from, criteriaBuilder);
     };
+  }
+
+  private <Z, X> Predicate buildLessThanOrEqualsPredicate(
+      From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
+    Expression<? extends Comparable> predicateExpression =
+        (Expression) criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+    return criteriaBuilder.lessThanOrEqualTo(predicateExpression, value);
+  }
+
+  private <Z, X> Predicate buildGreaterThanOrEqualsPredicate(
+      From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
+    Expression<? extends Comparable> predicateExpression =
+        (Expression) criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+    return criteriaBuilder.greaterThanOrEqualTo(predicateExpression, value);
+  }
+
+  private <Z, X> Predicate buildLessThanPredicate(
+      From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
+    Expression<? extends Comparable> predicateExpression =
+        (Expression) criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+    return criteriaBuilder.lessThan(predicateExpression, value);
+  }
+
+  private <Z, X> Predicate buildGreaterThanPredicate(
+      From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
+    Expression<? extends Comparable> predicateExpression =
+        (Expression<? extends Comparable>)
+            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+    return criteriaBuilder.greaterThan(predicateExpression, value);
   }
 
   private <Z, X> Predicate buildLikePredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     String path = criteriaValue.path();
-    Object value = criteriaValue.value();
+    String value = String.valueOf(criteriaValue.value());
     CriteriaValueType type = criteriaValue.type();
     return switch (type) {
       case PROPERTY -> criteriaBuilder.like(from.get(path), "%" + value + "%");
       case JSON_PROPERTY -> {
-        CriteriaJsonValue<?> criteriaJsonValue = (CriteriaJsonValue<?>) criteriaValue;
-        String jsonPath = criteriaJsonValue.jsonPath();
-        JsonExtractExtractor jsonExtractExtractor = getJsonExtractService();
-        yield jsonExtractExtractor.buildJsonLikePredicate(
-            from,
-            criteriaBuilder,
-            path,
-            jsonPath,
-            criteriaJsonValue.columnType(),
-            String.valueOf(value));
+        CriteriaJsonValue<String> criteriaJsonValue = (CriteriaJsonValue<String>) criteriaValue;
+        yield criteriaBuilder.like(
+            criteriaJsonValue.getPredicateExpression(sqlDialect, from, criteriaBuilder),
+            getLikeExpression(value));
       }
     };
   }
@@ -76,21 +103,13 @@ public class CriteriaPredicateGenerator<T> {
       case PROPERTY -> criteriaBuilder.equal(from.get(path), value);
       case JSON_PROPERTY -> {
         CriteriaJsonValue<?> criteriaJsonValue = (CriteriaJsonValue<?>) criteriaValue;
-        Class<T> classz = criteriaValue.classz();
-        String jsonPath = criteriaJsonValue.jsonPath();
-        JsonExtractExtractor jsonExtractExtractor = getJsonExtractService();
-        yield jsonExtractExtractor.buildJsonEqualPredicate(
-            from, criteriaBuilder, path, jsonPath, criteriaJsonValue.columnType(), classz, value);
+        yield criteriaBuilder.equal(
+            criteriaJsonValue.getPredicateExpression(sqlDialect, from, criteriaBuilder), value);
       }
     };
   }
 
-  private JsonExtractExtractor getJsonExtractService() {
-    return switch (sqlDialect) {
-      case "MySQL", "MariaDB" -> new MySqlJsonExtractor();
-      case "PostgreSQL" -> new PostgresJsonExtractor();
-      case "Oracle", "Microsoft SQL Server" -> new DefaultJsonExtractor();
-      default -> throw new SearchException(sqlDialect + " is not supported to extract json fields");
-    };
+  private static String getLikeExpression(String value) {
+    return "%" + value + "%";
   }
 }

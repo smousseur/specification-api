@@ -1,7 +1,7 @@
 package com.smousseur.specification.api.generator;
 
 import com.smousseur.specification.api.criteria.AbstractCriteria;
-import com.smousseur.specification.api.criteria.CriteriaNode;
+import com.smousseur.specification.api.criteria.CriteriaJoin;
 import com.smousseur.specification.api.criteria.CriteriaValue;
 import jakarta.persistence.criteria.*;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class CriteriaSpecificationGenerator<T> {
           Join<Object, Object> join = null;
           List<Predicate> predicates = new ArrayList<>();
           for (AbstractCriteria criteria : criterias) {
-            if (criteria instanceof CriteriaNode node) {
+            if (criteria instanceof CriteriaJoin node) {
               join = join == null ? root.join(node.path()) : join.join(node.path());
             } else if (criteria instanceof CriteriaValue<?> value) {
               CriteriaPredicateGenerator<?> criteriaPredicateGenerator =

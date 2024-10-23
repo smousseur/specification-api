@@ -1,5 +1,9 @@
 package com.smousseur.specification.api.criteria;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.From;
+
 /**
  * The interface Criteria value.
  *
@@ -35,4 +39,7 @@ public interface CriteriaValue<T> extends AbstractCriteria {
    * @return the class
    */
   Class<T> classz();
+
+  <Z, X> Expression<T> getPredicateExpression(
+      String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder);
 }

@@ -1,31 +1,40 @@
 grammar Expression;
 
 expression
-    : basicExpression ('->' basicExpression)*
+    : (join '->')* path operator VALUE
     ;
 
-basicExpression
-    : join | value
+operator
+    : '='
+    | 'like'
+    | '>'
+    | '>='
+    | '<'
+    | '<='
+    | 'isnull'
+    | 'in'
     ;
 
 join
     : 'join(' IDENTIFIER ')'
-    | 'join(' IDENTIFIER ',' IDENTIFIER ')'
     ;
 
-value
-    : objectValue
-    | jsonValue
+path
+    : objectPath
+    | jsonPath
     ;
 
-objectValue
-    : 'value(' IDENTIFIER ',' valueOperation '(' IDENTIFIER '))'
-    | 'value(' IDENTIFIER ',' valueOperation '(' IDENTIFIER '),' valueType ')'
+objectPath
+    : 'path(' IDENTIFIER (',' valueType)?')'
     ;
 
-jsonValue
-    : 'json_value(' IDENTIFIER ',' IDENTIFIER ',' valueOperation '(' IDENTIFIER '))'
-    | 'json_value(' IDENTIFIER ',' IDENTIFIER ',' valueOperation '(' IDENTIFIER '),' valueType (',' jsonOption)? ')'
+jsonPath
+    : 'json_path(' IDENTIFIER ',' IDENTIFIER (',' valueType)? (',' jsonOption)? ')'
+    ;
+
+jsonOption
+    : 'json'
+    | 'jsonb'
     ;
 
 valueType
@@ -35,28 +44,26 @@ valueType
     | 'double'
     | 'bool'
     | 'long'
+    | 'date'
+    | 'datetime'
     ;
 
-jsonOption
-    : 'json'
-    | 'jsonb'
-    ;
-
-valueOperation
-    : 'eq'
-    | 'like'
-    ;
 
 IDENTIFIER
     : ALPHANUM+
-    | (ALPHANUM+ SPACE ALPHANUM+)
     ;
 
 fragment DIGIT: [0-9];
-fragment LETTER: [a-zA-Z_$-'];
+fragment LETTER: [a-zA-Z_'];
 fragment DOT: '.';
-fragment SPACE: ' ';
+fragment QUESTION_MARK: '?';
+
 ALPHANUM: LETTER | DIGIT | DOT;
+
+VALUE
+    : '"' ~["]+ '"'
+    | QUESTION_MARK
+    ;
 
 WS
     : [ \t\n\r]+ -> skip

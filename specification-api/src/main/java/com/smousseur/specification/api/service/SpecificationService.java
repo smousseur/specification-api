@@ -2,6 +2,7 @@ package com.smousseur.specification.api.service;
 
 import com.smousseur.specification.api.annotation.SearchPath;
 import com.smousseur.specification.api.criteria.AbstractCriteria;
+import com.smousseur.specification.api.exception.SearchException;
 import com.smousseur.specification.api.generator.CriteriaSpecificationGenerator;
 import com.smousseur.specification.api.generator.SpecificationParser;
 import com.smousseur.specification.api.util.Utils;
@@ -59,8 +60,8 @@ public class SpecificationService {
     String annotationPath =
         Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class))
             .map(SearchPath::value)
-            .orElseThrow();
-    return String.format(annotationPath, value);
+            .orElseThrow(() -> new SearchException("Cannot get search annotation"));
+    return annotationPath.replace("?", "\"" + value + "\"");
   }
 
   private static boolean filterFieldsWithSearchPath(Field field) {
