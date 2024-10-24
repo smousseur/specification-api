@@ -8,6 +8,7 @@ import com.smousseur.specification.api.exception.ParseException;
 import com.smousseur.specification.api.exception.SearchException;
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -21,29 +22,21 @@ import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.ReflectionUtils;
 
 /** The type Specification validation service. */
-public class SpecificationValidationService {
+public abstract class SpecificationValidationService {
   /** The Resource loader. */
   private final ResourceLoader resourceLoader;
 
-  /** The Configuration. */
-  private final SpecificationServiceConfiguration configuration;
-
-  public SpecificationValidationService(
-      SpecificationServiceConfiguration configuration, ResourceLoader resourceLoader) {
-    this.configuration = configuration;
+  protected SpecificationValidationService(ResourceLoader resourceLoader) {
     this.resourceLoader = resourceLoader;
   }
 
   /** Validate. */
   @PostConstruct
   public void validate() {
-    if (configuration.isDoValidation()) {
-      String[] packages = configuration.packagesToScan();
-      for (String package_ : packages) {
-        validatePackage(package_);
-      }
-    }
+    Arrays.stream(packagesToScan()).forEach(this::validatePackage);
   }
+
+  public abstract String[] packagesToScan();
 
   private void validatePackage(String packageToValidate) {
     ClassPathScanningCandidateComponentProvider scanner =

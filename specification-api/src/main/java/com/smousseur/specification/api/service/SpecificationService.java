@@ -12,14 +12,19 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.jdbc.core.ConnectionCallback;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.ReflectionUtils;
 
 /** The type Specification service. */
 public class SpecificationService {
-  private final SpecificationServiceConfiguration configuration;
+  private final String sqlDialect;
 
-  public SpecificationService(SpecificationServiceConfiguration configuration) {
-    this.configuration = configuration;
+  public SpecificationService(JdbcTemplate jdbcTemplate) {
+    this.sqlDialect =
+        jdbcTemplate.execute(
+            (ConnectionCallback<String>)
+                connection -> connection.getMetaData().getDatabaseProductName());
   }
 
   /**
@@ -46,7 +51,7 @@ public class SpecificationService {
             .map(spec -> new SpecificationParser(spec).parse())
             .flatMap(List::stream)
             .toList();
-    return new CriteriaSpecificationGenerator<T>(criterias, configuration.getSqlDialect())
+    return new CriteriaSpecificationGenerator<T>(criterias, this.sqlDialect)
         .generateSpecification();
   }
 

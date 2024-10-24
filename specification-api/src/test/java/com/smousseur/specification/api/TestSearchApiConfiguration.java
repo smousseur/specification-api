@@ -1,7 +1,6 @@
 package com.smousseur.specification.api;
 
 import com.smousseur.specification.api.service.SpecificationService;
-import com.smousseur.specification.api.service.SpecificationServiceConfiguration;
 import com.smousseur.specification.api.service.SpecificationValidationService;
 import java.util.Properties;
 import javax.sql.DataSource;
@@ -61,26 +60,18 @@ public class TestSearchApiConfiguration {
   }
 
   @Bean
-  public SpecificationServiceConfiguration testApiSearchServiceConfiguration(
-      JdbcTemplate jdbcTemplate) {
-    return new SpecificationServiceConfiguration(jdbcTemplate) {
+  public SpecificationService specificationService(JdbcTemplate jdbcTemplate) {
+    return new SpecificationService(jdbcTemplate);
+  }
+
+  @Bean
+  public SpecificationValidationService specificationValidationService(
+      ResourceLoader resourceLoader) {
+    return new SpecificationValidationService(resourceLoader) {
       @Override
       public String[] packagesToScan() {
         return new String[] {"com.smousseur.specification.api.service.model"};
       }
     };
-  }
-
-  @Bean
-  public SpecificationService specificationService(
-      SpecificationServiceConfiguration configuration) {
-    return new SpecificationService(configuration);
-  }
-
-  @Bean
-  public SpecificationValidationService specificationValidationService(
-      ResourceLoader resourceLoader,
-      SpecificationServiceConfiguration specificationServiceConfiguration) {
-    return new SpecificationValidationService(specificationServiceConfiguration, resourceLoader);
   }
 }
