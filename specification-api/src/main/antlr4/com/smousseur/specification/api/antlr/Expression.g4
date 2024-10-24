@@ -11,8 +11,7 @@ operator
     | '>='
     | '<'
     | '<='
-    | 'isnull'
-    | 'in'
+    | 'contains'
     ;
 
 join
@@ -48,11 +47,6 @@ valueType
     | 'datetime'
     ;
 
-
-IDENTIFIER
-    : ALPHANUM+
-    ;
-
 fragment DIGIT: [0-9];
 fragment LETTER: [a-zA-Z_'];
 fragment DOT: '.';
@@ -60,8 +54,12 @@ fragment QUESTION_MARK: '?';
 
 ALPHANUM: LETTER | DIGIT | DOT;
 
+IDENTIFIER
+    : ALPHANUM+
+    ;
+
 VALUE
-    : '"' ~["]+ '"'
+    : '"' ~[\u007F]+ '"'
     | QUESTION_MARK
     ;
 

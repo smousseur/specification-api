@@ -17,7 +17,7 @@ public interface CriteriaValue<T> extends AbstractCriteria {
    *
    * @return the criteria value operation
    */
-  CriteriaValueOperation operation();
+  CriteriaOperation operation();
 
   /**
    * Type criteria value type.
@@ -42,4 +42,9 @@ public interface CriteriaValue<T> extends AbstractCriteria {
 
   <Z, X> Expression<T> getPredicateExpression(
       String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder);
+
+  @Override
+  default CriteriaType criteriaType() {
+    return CriteriaType.VALUE;
+  }
 }

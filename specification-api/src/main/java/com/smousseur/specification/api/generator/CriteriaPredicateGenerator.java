@@ -1,19 +1,20 @@
 package com.smousseur.specification.api.generator;
 
-import com.smousseur.specification.api.criteria.CriteriaJsonValue;
+import com.smousseur.specification.api.criteria.CriteriaOperation;
 import com.smousseur.specification.api.criteria.CriteriaValue;
-import com.smousseur.specification.api.criteria.CriteriaValueOperation;
-import com.smousseur.specification.api.criteria.CriteriaValueType;
+import com.smousseur.specification.api.util.Utils;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Predicate;
+import java.util.Collection;
 
 /**
  * The type Criteria predicate generator.
  *
  * @param <T> the type parameter
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class CriteriaPredicateGenerator<T> {
   /** The Criteria value. */
   private final CriteriaValue<T> criteriaValue;
@@ -36,7 +37,7 @@ public class CriteriaPredicateGenerator<T> {
    * @return the predicate
    */
   public <Z, X> Predicate generatePredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
-    CriteriaValueOperation operation = criteriaValue.operation();
+    CriteriaOperation operation = criteriaValue.operation();
     return switch (operation) {
       case EQUALS -> buildEqualPredicate(from, criteriaBuilder);
       case LIKE -> buildLikePredicate(from, criteriaBuilder);
@@ -44,14 +45,23 @@ public class CriteriaPredicateGenerator<T> {
       case LESS_THAN -> buildLessThanPredicate(from, criteriaBuilder);
       case GREATER_THAN_OR_EQUALS -> buildGreaterThanOrEqualsPredicate(from, criteriaBuilder);
       case LESS_THAN_OR_EQUALS -> buildLessThanOrEqualsPredicate(from, criteriaBuilder);
+      case CONTAINS -> buildInPredicate(from, criteriaBuilder);
     };
+  }
+
+  private <Z, X> Predicate buildInPredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    Expression<? extends Collection<T>> predicateExpression =
+        (Expression<? extends Collection<T>>)
+            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+    return criteriaBuilder.isMember(criteriaValue.value(), predicateExpression);
   }
 
   private <Z, X> Predicate buildLessThanOrEqualsPredicate(
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
     Expression<? extends Comparable> predicateExpression =
-        (Expression) criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        (Expression<? extends Comparable>)
+            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.lessThanOrEqualTo(predicateExpression, value);
   }
 
@@ -59,7 +69,8 @@ public class CriteriaPredicateGenerator<T> {
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
     Expression<? extends Comparable> predicateExpression =
-        (Expression) criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        (Expression<? extends Comparable>)
+            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.greaterThanOrEqualTo(predicateExpression, value);
   }
 
@@ -67,7 +78,8 @@ public class CriteriaPredicateGenerator<T> {
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
     Expression<? extends Comparable> predicateExpression =
-        (Expression) criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        (Expression<? extends Comparable>)
+            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.lessThan(predicateExpression, value);
   }
 
@@ -81,35 +93,17 @@ public class CriteriaPredicateGenerator<T> {
   }
 
   private <Z, X> Predicate buildLikePredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
-    String path = criteriaValue.path();
     String value = String.valueOf(criteriaValue.value());
-    CriteriaValueType type = criteriaValue.type();
-    return switch (type) {
-      case PROPERTY -> criteriaBuilder.like(from.get(path), "%" + value + "%");
-      case JSON_PROPERTY -> {
-        CriteriaJsonValue<String> criteriaJsonValue = (CriteriaJsonValue<String>) criteriaValue;
-        yield criteriaBuilder.like(
-            criteriaJsonValue.getPredicateExpression(sqlDialect, from, criteriaBuilder),
-            getLikeExpression(value));
-      }
-    };
+    final String likeValue = Utils.wrap(value, "%");
+    Expression<String> predicateExpression =
+        (Expression<String>)
+            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+    return criteriaBuilder.like(predicateExpression, likeValue);
   }
 
   private <Z, X> Predicate buildEqualPredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
-    String path = criteriaValue.path();
-    Object value = criteriaValue.value();
-    CriteriaValueType type = criteriaValue.type();
-    return switch (type) {
-      case PROPERTY -> criteriaBuilder.equal(from.get(path), value);
-      case JSON_PROPERTY -> {
-        CriteriaJsonValue<?> criteriaJsonValue = (CriteriaJsonValue<?>) criteriaValue;
-        yield criteriaBuilder.equal(
-            criteriaJsonValue.getPredicateExpression(sqlDialect, from, criteriaBuilder), value);
-      }
-    };
-  }
-
-  private static String getLikeExpression(String value) {
-    return "%" + value + "%";
+    return criteriaBuilder.equal(
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder),
+        criteriaValue.value());
   }
 }

@@ -2,6 +2,7 @@ package com.smousseur.specification.api.generator;
 
 import com.smousseur.specification.api.criteria.AbstractCriteria;
 import com.smousseur.specification.api.criteria.CriteriaJoin;
+import com.smousseur.specification.api.criteria.CriteriaType;
 import com.smousseur.specification.api.criteria.CriteriaValue;
 import jakarta.persistence.criteria.*;
 import java.util.ArrayList;
@@ -35,22 +36,20 @@ public class CriteriaSpecificationGenerator<T> {
     List<Specification<T>> specs = new ArrayList<>();
     specs.add(
         (root, query, criteriaBuilder) -> {
-          Join<Object, Object> join = null;
+          Join<Object, Object> currentJoin = null;
           List<Predicate> predicates = new ArrayList<>();
           for (AbstractCriteria criteria : criterias) {
-            if (criteria instanceof CriteriaJoin node) {
-              join = join == null ? root.join(node.path()) : join.join(node.path());
-            } else if (criteria instanceof CriteriaValue<?> value) {
+            if (criteria.criteriaType() == CriteriaType.JOIN) {
+              CriteriaJoin node = (CriteriaJoin) criteria;
+              currentJoin =
+                  currentJoin == null ? root.join(node.path()) : currentJoin.join(node.path());
+            } else if (criteria.criteriaType() == CriteriaType.VALUE) {
+              CriteriaValue<?> value = (CriteriaValue<?>) criteria;
               CriteriaPredicateGenerator<?> criteriaPredicateGenerator =
                   new CriteriaPredicateGenerator<>(value, sqlDialect);
-              Predicate predicate;
-              if (join != null) {
-                predicate = criteriaPredicateGenerator.generatePredicate(join, criteriaBuilder);
-                join = null;
-              } else {
-                predicate = criteriaPredicateGenerator.generatePredicate(root, criteriaBuilder);
-              }
-              predicates.add(predicate);
+              From<?, ?> from = currentJoin != null ? currentJoin : root;
+              predicates.add(criteriaPredicateGenerator.generatePredicate(from, criteriaBuilder));
+              currentJoin = null;
             }
           }
           return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

@@ -6,6 +6,7 @@ import com.smousseur.specification.api.antlr.ExpressionParser;
 import com.smousseur.specification.api.criteria.*;
 import com.smousseur.specification.api.criteria.AbstractCriteria;
 import com.smousseur.specification.api.exception.ParseException;
+import com.smousseur.specification.api.util.Utils;
 import com.smousseur.specification.api.util.Wrapper;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   private final String expression;
   private final List<AbstractCriteria> criterias = new ArrayList<>();
-  private final Wrapper<CriteriaValueOperation> operation = new Wrapper<>();
+  private final Wrapper<CriteriaOperation> operation = new Wrapper<>();
   private final Wrapper<String> valueType = new Wrapper<>();
   private final Wrapper<String> jsonOption = new Wrapper<>();
   private final Wrapper<String> valuePath = new Wrapper<>();
@@ -48,7 +49,8 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   public Void visitExpression(ExpressionParser.ExpressionContext ctx) {
     Void unused = super.visitExpression(ctx);
     String value = ctx.VALUE().getText();
-    value = value.replace("\"", "");
+    value = value.replaceFirst("\"", "");
+    value = Utils.replaceLast(value, "\"", "");
     if (jsonValuePath.isEmpty()) {
       criterias.add(getCriteriaObjectValue(value));
     } else {
@@ -87,7 +89,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
 
   @Override
   public Void visitOperator(ExpressionParser.OperatorContext ctx) {
-    operation.setValue(CriteriaValueOperation.fromOperator(ctx.getText()));
+    operation.setValue(CriteriaOperation.fromOperator(ctx.getText()));
     return super.visitOperator(ctx);
   }
 
@@ -166,7 +168,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   }
 
   private <T> CriteriaJsonValue<T> getNewCriteriaJsonValue(
-      String field, String path, CriteriaValueOperation operation, T value, Class<T> type) {
+          String field, String path, CriteriaOperation operation, T value, Class<T> type) {
     CriteriaJsonColumnType columnType = getCriteriaJsonColumnType();
     return new CriteriaJsonValue<>(
         field, path, columnType, operation, CriteriaValueType.JSON_PROPERTY, value, type);

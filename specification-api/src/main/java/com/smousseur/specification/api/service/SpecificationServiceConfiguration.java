@@ -5,15 +5,20 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 /** The type Search service configuration. */
 public abstract class SpecificationServiceConfiguration {
-  private final JdbcTemplate jdbcTemplate;
   private final String sqlDialect;
 
+  private boolean doValidation = true;
+
   protected SpecificationServiceConfiguration(JdbcTemplate jdbcTemplate) {
-    this.jdbcTemplate = jdbcTemplate;
     this.sqlDialect =
-        this.jdbcTemplate.execute(
+        jdbcTemplate.execute(
             (ConnectionCallback<String>)
                 connection -> connection.getMetaData().getDatabaseProductName());
+  }
+
+  protected SpecificationServiceConfiguration(JdbcTemplate jdbcTemplate, boolean doValidation) {
+    this(jdbcTemplate);
+    this.doValidation = doValidation;
   }
 
   /**
@@ -30,5 +35,9 @@ public abstract class SpecificationServiceConfiguration {
    */
   public String getSqlDialect() {
     return sqlDialect;
+  }
+
+  public boolean isDoValidation() {
+    return doValidation;
   }
 }

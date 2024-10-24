@@ -5,7 +5,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 
 public record CriteriaObjectValue<T>(
-    String path, CriteriaValueOperation operation, CriteriaValueType type, T value, Class<T> classz)
+    String path, CriteriaOperation operation, CriteriaValueType type, T value, Class<T> classz)
     implements CriteriaValue<T> {
   @Override
   public <Z, X> Expression<T> getPredicateExpression(

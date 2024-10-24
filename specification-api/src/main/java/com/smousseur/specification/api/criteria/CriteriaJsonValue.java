@@ -18,7 +18,7 @@ public record CriteriaJsonValue<T>(
     String path,
     String jsonPath,
     CriteriaJsonColumnType columnType,
-    CriteriaValueOperation operation,
+    CriteriaOperation operation,
     CriteriaValueType type,
     T value,
     Class<T> classz)

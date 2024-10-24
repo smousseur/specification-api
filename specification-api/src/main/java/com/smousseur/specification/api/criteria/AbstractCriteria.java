@@ -8,4 +8,6 @@ public interface AbstractCriteria {
    * @return the string
    */
   String path();
+
+  CriteriaType criteriaType();
 }

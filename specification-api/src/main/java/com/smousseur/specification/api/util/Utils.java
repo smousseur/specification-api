@@ -12,6 +12,41 @@ public final class Utils {
   }
 
   /**
+   * Replace last string.
+   *
+   * @param str the str
+   * @param target the old char
+   * @param replacement the new char
+   * @return the string
+   */
+  public static String replaceLast(String str, String target, String replacement) {
+    return str.replaceFirst("(?s)(.*)" + target, "$1" + replacement);
+  }
+
+  /**
+   * Wrap string.
+   *
+   * @param value the value
+   * @param wrapper the wrapper
+   * @return the string
+   */
+  public static String wrap(String value, String wrapper) {
+    return addPrefixAndSuffix(value, wrapper, wrapper);
+  }
+
+  /**
+   * Add prefix and suffix string.
+   *
+   * @param value the value
+   * @param prefix the prefix
+   * @param suffix the suffix
+   * @return the string
+   */
+  public static String addPrefixAndSuffix(String value, String prefix, String suffix) {
+    return prefix + value + suffix;
+  }
+
+  /**
    * Call field getter object.
    *
    * @param <T> the type parameter

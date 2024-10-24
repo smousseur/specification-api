@@ -37,9 +37,11 @@ public class SpecificationValidationService {
   /** Validate. */
   @PostConstruct
   public void validate() {
-    String[] packages = configuration.packagesToScan();
-    for (String package_ : packages) {
-      validatePackage(package_);
+    if (configuration.isDoValidation()) {
+      String[] packages = configuration.packagesToScan();
+      for (String package_ : packages) {
+        validatePackage(package_);
+      }
     }
   }
 
