@@ -23,6 +23,18 @@ class Service {
 }    
 ```
 
+## Configuration
+
+The `SpecificationService` bean only needs a `JdbcTemplate`
+*Sample:*
+
+``` java
+  @Bean
+  public SpecificationService specificationService(JdbcTemplate jdbcTemplate) {
+    return new SpecificationService(jdbcTemplate);
+  }
+```
+
 ## The entity
 
 Define the entity with usual JPA annotation
@@ -51,7 +63,7 @@ This is the object containing all search parameters.
 
 ``` java
 @SearchRequestObject
-public record SearchRequest(@SearchPath("value(id, eq(%s), int)") Integer entityId) {}
+public record SearchRequest(@SearchPath("path(name) like ?") Integer entityId) {}
 ```
 
 ### Syntax
@@ -65,6 +77,24 @@ These informations are a chain of operations to test a value with a field using 
     2. Operators
     3. Types
 3. Json values
+
+### Validation
+
+There is an optional bean to validate all expressions set with `@SearchPath`
+*Sample:*
+
+``` java
+  @Bean
+  public SpecificationValidationService specificationValidationService(
+      ResourceLoader resourceLoader) {
+    return new SpecificationValidationService(resourceLoader) {
+      @Override
+      public String[] packagesToScan() {
+        return new String[] {"package.that.contain.classes.annotated.with.SearchPath"};
+      }
+    };
+  }
+```
 
 ## Json and Prostgres
 
