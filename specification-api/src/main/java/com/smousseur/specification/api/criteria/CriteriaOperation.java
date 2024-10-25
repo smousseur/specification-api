@@ -1,6 +1,6 @@
 package com.smousseur.specification.api.criteria;
 
-import com.smousseur.specification.api.exception.ParseException;
+import com.smousseur.specification.api.exception.SpecificationParseException;
 import java.util.Arrays;
 
 /** The enum Criteria value operation. */
@@ -30,6 +30,6 @@ public enum CriteriaOperation {
     return Arrays.stream(CriteriaOperation.values())
         .filter(op -> op.value.equals(operator))
         .findFirst()
-        .orElseThrow(() -> new ParseException("Unknown operator: " + operator));
+        .orElseThrow(() -> new SpecificationParseException("Unknown operator: " + operator));
   }
 }

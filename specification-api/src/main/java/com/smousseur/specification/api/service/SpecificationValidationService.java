@@ -4,8 +4,8 @@ import com.smousseur.specification.api.annotation.SearchPath;
 import com.smousseur.specification.api.annotation.SearchRequestObject;
 import com.smousseur.specification.api.antlr.ExpressionLexer;
 import com.smousseur.specification.api.antlr.ExpressionParser;
-import com.smousseur.specification.api.exception.ParseException;
-import com.smousseur.specification.api.exception.SearchException;
+import com.smousseur.specification.api.exception.SpecificationException;
+import com.smousseur.specification.api.exception.SpecificationParseException;
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -54,7 +54,7 @@ public abstract class SpecificationValidationService {
                 className = beanDefinition.getBeanClassName();
                 searchClasses.add(Class.forName(className));
               } catch (ClassNotFoundException e) {
-                throw new SearchException("Cannot get class: " + className, e);
+                throw new SpecificationException("Cannot get class: " + className, e);
               }
             });
     searchClasses.forEach(this::validateClass);
@@ -70,8 +70,7 @@ public abstract class SpecificationValidationService {
   private void validateField(Class<?> searchClass, Field field) {
     SearchPath annotationSearch =
         Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class)).orElseThrow();
-    String expression = annotationSearch.value().replace("%", "");
-    CharStream charStream = CharStreams.fromString(expression);
+    CharStream charStream = CharStreams.fromString(annotationSearch.value());
     ExpressionLexer lexer = new ExpressionLexer(charStream);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
     ExpressionParser parser = new ExpressionParser(tokens);
@@ -85,7 +84,7 @@ public abstract class SpecificationValidationService {
               int charPositionInLine,
               String msg,
               RecognitionException e) {
-            throw new ParseException(
+            throw new SpecificationParseException(
                 "Invalid search expression for class %s and field \"%s\", message: %s",
                 searchClass.getName(), field.getName(), msg);
           }

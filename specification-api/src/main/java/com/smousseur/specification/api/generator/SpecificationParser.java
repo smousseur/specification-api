@@ -5,7 +5,7 @@ import com.smousseur.specification.api.antlr.ExpressionLexer;
 import com.smousseur.specification.api.antlr.ExpressionParser;
 import com.smousseur.specification.api.criteria.*;
 import com.smousseur.specification.api.criteria.AbstractCriteria;
-import com.smousseur.specification.api.exception.ParseException;
+import com.smousseur.specification.api.exception.SpecificationParseException;
 import com.smousseur.specification.api.util.Utils;
 import com.smousseur.specification.api.util.Wrapper;
 import java.time.LocalDate;
@@ -13,9 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.*;
 
 /** The type Specification parser service. */
 public class SpecificationParser extends ExpressionBaseVisitor<Void> {
@@ -41,6 +39,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
     ExpressionLexer lexer = new ExpressionLexer(charStream);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
     ExpressionParser parser = new ExpressionParser(tokens);
+    addParserErrorListener(parser);
     this.visit(parser.expression());
     return criterias;
   }
@@ -158,6 +157,16 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
             case "bool" ->
                 getNewCriteriaJsonValue(
                     path, jsonPath, operation.getValue(), Boolean.valueOf(value), Boolean.class);
+            case "date" ->
+                getNewCriteriaJsonValue(
+                    path, jsonPath, operation.getValue(), LocalDate.parse(value), LocalDate.class);
+            case "datetime" ->
+                getNewCriteriaJsonValue(
+                    path,
+                    jsonPath,
+                    operation.getValue(),
+                    LocalDateTime.parse(value),
+                    LocalDateTime.class);
             default -> throw new UnsupportedOperationException("Type not supported");
           };
     } else {
@@ -168,7 +177,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   }
 
   private <T> CriteriaJsonValue<T> getNewCriteriaJsonValue(
-          String field, String path, CriteriaOperation operation, T value, Class<T> type) {
+      String field, String path, CriteriaOperation operation, T value, Class<T> type) {
     CriteriaJsonColumnType columnType = getCriteriaJsonColumnType();
     return new CriteriaJsonValue<>(
         field, path, columnType, operation, CriteriaValueType.JSON_PROPERTY, value, type);
@@ -182,7 +191,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
                   case "json" -> CriteriaJsonColumnType.JSON;
                   case "jsonb" -> CriteriaJsonColumnType.JSONB;
                   default ->
-                      throw new ParseException(String.format("Unknown json column type %s", val));
+                      throw new SpecificationParseException("Unknown json column type " + val);
                 })
         .orElse(CriteriaJsonColumnType.JSONB);
   }
@@ -190,5 +199,21 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   private <T> CriteriaObjectValue<T> getNewCriteriaObjectValue(T value, Class<T> type) {
     return new CriteriaObjectValue<>(
         valuePath.getValue(), operation.getValue(), CriteriaValueType.PROPERTY, value, type);
+  }
+
+  private static void addParserErrorListener(ExpressionParser parser) {
+    parser.addErrorListener(
+        new BaseErrorListener() {
+          @Override
+          public void syntaxError(
+              Recognizer<?, ?> recognizer,
+              Object offendingSymbol,
+              int line,
+              int charPositionInLine,
+              String msg,
+              RecognitionException e) {
+            throw new SpecificationParseException("Syntax error: " + msg);
+          }
+        });
   }
 }

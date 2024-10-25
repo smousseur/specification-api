@@ -1,6 +1,7 @@
 package com.smousseur.specification.api.example.model.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
 
@@ -21,6 +22,9 @@ public class User {
 
   @Column(name = "email")
   private String email;
+
+  @Column(name = "last_connection")
+  private LocalDateTime lastConnection;
 
   @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
   @JoinTable(

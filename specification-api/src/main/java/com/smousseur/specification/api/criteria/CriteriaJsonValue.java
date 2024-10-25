@@ -1,6 +1,6 @@
 package com.smousseur.specification.api.criteria;
 
-import com.smousseur.specification.api.exception.SearchException;
+import com.smousseur.specification.api.exception.SpecificationException;
 import com.smousseur.specification.api.json.DefaultJsonExpression;
 import com.smousseur.specification.api.json.JsonExpression;
 import com.smousseur.specification.api.json.MySqlJsonExpression;
@@ -26,7 +26,7 @@ public record CriteriaJsonValue<T>(
   public <Z, X> Expression<T> getPredicateExpression(
       String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     JsonExpression<T> jsonExtractService = getJsonExtractService(sqlDialect);
-    return jsonExtractService.getExpression(this, from, criteriaBuilder);
+    return jsonExtractService.getEvaluatedExpression(this, from, criteriaBuilder);
   }
 
   private JsonExpression<T> getJsonExtractService(String sqlDialect) {
@@ -34,7 +34,8 @@ public record CriteriaJsonValue<T>(
       case "MySQL", "MariaDB" -> new MySqlJsonExpression<>();
       case "PostgreSQL" -> new PostgresJsonExpression<>();
       case "Oracle", "Microsoft SQL Server" -> new DefaultJsonExpression<>();
-      default -> throw new SearchException(sqlDialect + " is not supported to extract json fields");
+      default ->
+          throw new SpecificationException(sqlDialect + " is not supported to extract json fields");
     };
   }
 }

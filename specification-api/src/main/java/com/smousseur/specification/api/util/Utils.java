@@ -1,11 +1,11 @@
 package com.smousseur.specification.api.util;
 
-import com.smousseur.specification.api.exception.SearchException;
+import com.smousseur.specification.api.exception.SpecificationException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.springframework.util.ReflectionUtils;
 
-/** The type Reflection util. */
+/** The type Utils. */
 public final class Utils {
   private Utils() {
     // nothing to do
@@ -54,7 +54,7 @@ public final class Utils {
    * @param object the object
    * @return the object
    */
-  public static <T> Object callFieldGetter(Field field, T object) {
+  public static <T> Object callGetterForField(Field field, T object) {
     String fieldName = field.getName();
     Class<?> searchRequestClass = object.getClass();
     Method getter = getGetterMethod(searchRequestClass, fieldName);
@@ -73,7 +73,7 @@ public final class Utils {
       getter = ReflectionUtils.findMethod(objectClass, getterName);
     }
     if (getter == null) {
-      throw new SearchException(
+      throw new SpecificationException(
           String.format(
               "Cannot get getter method for field %s and class %s",
               fieldName, objectClass.getName()));
@@ -81,7 +81,7 @@ public final class Utils {
     return getter;
   }
 
-  private static String getGetterName(String get, String fieldName) {
-    return get + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+  private static String getGetterName(String getterMethodPrefix, String fieldName) {
+    return getterMethodPrefix + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
   }
 }

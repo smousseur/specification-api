@@ -2,7 +2,7 @@ package com.smousseur.specification.api.service;
 
 import com.smousseur.specification.api.annotation.SearchPath;
 import com.smousseur.specification.api.criteria.AbstractCriteria;
-import com.smousseur.specification.api.exception.SearchException;
+import com.smousseur.specification.api.exception.SpecificationException;
 import com.smousseur.specification.api.generator.CriteriaSpecificationGenerator;
 import com.smousseur.specification.api.generator.SpecificationParser;
 import com.smousseur.specification.api.util.Utils;
@@ -56,7 +56,7 @@ public class SpecificationService {
   }
 
   private static <R> void processField(Field field, R searchRequest, List<String> requestSpecs) {
-    Optional.ofNullable(Utils.callFieldGetter(field, searchRequest))
+    Optional.ofNullable(Utils.callGetterForField(field, searchRequest))
         .map(value -> mapPath(field, value))
         .ifPresent(requestSpecs::add);
   }
@@ -65,7 +65,7 @@ public class SpecificationService {
     String annotationPath =
         Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class))
             .map(SearchPath::value)
-            .orElseThrow(() -> new SearchException("Cannot get search annotation"));
+            .orElseThrow(() -> new SpecificationException("Cannot get search annotation"));
     return annotationPath.replace("?", "\"" + value + "\"");
   }
 

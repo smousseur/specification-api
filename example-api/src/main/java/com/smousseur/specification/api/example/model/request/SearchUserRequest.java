@@ -2,6 +2,8 @@ package com.smousseur.specification.api.example.model.request;
 
 import com.smousseur.specification.api.annotation.SearchPath;
 import com.smousseur.specification.api.annotation.SearchRequestObject;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Tag this class as a entry point to generate JPA specifications.
@@ -15,5 +17,7 @@ import com.smousseur.specification.api.annotation.SearchRequestObject;
 @SearchRequestObject
 public record SearchUserRequest(
     @SearchPath("path(name) like ?") String name,
+    @SearchPath("path(lastConnection, datetime) >= ?") LocalDateTime lastConnection,
     @SearchPath("join(address)->json_path(location, coord.x, int) = ?") Integer lattitude,
-    @SearchPath("join(address)->json_path(location, street) like ?") String street) {}
+    @SearchPath("join(address)->json_path(location, street) like ?") String street,
+    @SearchPath("join(address)->json_path(location, lastVisit, date) < ?") LocalDate lastVisit) {}
