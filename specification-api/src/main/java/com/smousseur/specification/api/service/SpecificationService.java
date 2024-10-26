@@ -1,7 +1,9 @@
 package com.smousseur.specification.api.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smousseur.specification.api.annotation.SearchPath;
-import com.smousseur.specification.api.criteria.AbstractCriteria;
+import com.smousseur.specification.api.criteria.Criteria;
 import com.smousseur.specification.api.exception.SpecificationException;
 import com.smousseur.specification.api.generator.CriteriaSpecificationGenerator;
 import com.smousseur.specification.api.generator.SpecificationParser;
@@ -18,6 +20,8 @@ import org.springframework.util.ReflectionUtils;
 
 /** The type Specification service. */
 public class SpecificationService {
+  private static final ObjectMapper mapper = new ObjectMapper();
+
   private final String sqlDialect;
 
   public SpecificationService(JdbcTemplate jdbcTemplate) {
@@ -46,7 +50,7 @@ public class SpecificationService {
   }
 
   private <T> Specification<T> generateSpecification(List<String> requestSpecs) {
-    List<AbstractCriteria> criterias =
+    List<Criteria> criterias =
         requestSpecs.stream()
             .map(spec -> new SpecificationParser(spec).parse())
             .flatMap(List::stream)
@@ -66,7 +70,16 @@ public class SpecificationService {
         Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class))
             .map(SearchPath::value)
             .orElseThrow(() -> new SpecificationException("Cannot get search annotation"));
-    return annotationPath.replace("?", "\"" + value + "\"");
+    Object objValue = value;
+    if (objValue instanceof List<?>) {
+      try {
+        objValue = mapper.writeValueAsString(objValue);
+      } catch (JsonProcessingException e) {
+        throw new SpecificationException(
+            "Cannot deserialize list for property: " + field.getName(), e);
+      }
+    }
+    return annotationPath.replace("?", "\"" + objValue + "\"");
   }
 
   private static boolean filterFieldsWithSearchPath(Field field) {

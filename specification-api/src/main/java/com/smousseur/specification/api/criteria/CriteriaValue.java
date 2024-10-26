@@ -9,7 +9,7 @@ import jakarta.persistence.criteria.From;
  *
  * @param <T> the type parameter
  */
-public interface CriteriaValue<T> extends AbstractCriteria {
+public interface CriteriaValue<T> extends Criteria {
   String path();
 
   /**

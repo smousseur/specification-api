@@ -2,7 +2,7 @@ package com.smousseur.specification.api.generator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.smousseur.specification.api.criteria.AbstractCriteria;
+import com.smousseur.specification.api.criteria.Criteria;
 import com.smousseur.specification.api.criteria.CriteriaJsonColumnType;
 import com.smousseur.specification.api.criteria.CriteriaJsonValue;
 import com.smousseur.specification.api.criteria.CriteriaValue;
@@ -15,7 +15,7 @@ class SpecificationParserTest {
   void testParseJsonExpression() {
     String expression = "join(address)->json_path(location, coord.x, int) = \"10\"";
     SpecificationParser parser = new SpecificationParser(expression);
-    List<AbstractCriteria> criterias = parser.parse();
+    List<Criteria> criterias = parser.parse();
     assertEquals(2, criterias.size());
     assertEquals("address", criterias.get(0).path());
     CriteriaJsonValue jsonCriteria = (CriteriaJsonValue) criterias.get(1);
@@ -29,7 +29,7 @@ class SpecificationParserTest {
   void testQuotedExpression() {
     String expression = "join(address)->json_path(location, coord.x) like \"prout\"\"";
     SpecificationParser parser = new SpecificationParser(expression);
-    List<AbstractCriteria> criterias = parser.parse();
+    List<Criteria> criterias = parser.parse();
     assertEquals(2, criterias.size());
     assertEquals("address", criterias.get(0).path());
     assertEquals("prout\"", ((CriteriaValue<?>) criterias.get(1)).value());

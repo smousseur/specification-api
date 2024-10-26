@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Predicate;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * The type Criteria predicate generator.
@@ -45,11 +46,19 @@ public class CriteriaPredicateGenerator<T> {
       case LESS_THAN -> buildLessThanPredicate(from, criteriaBuilder);
       case GREATER_THAN_OR_EQUALS -> buildGreaterThanOrEqualsPredicate(from, criteriaBuilder);
       case LESS_THAN_OR_EQUALS -> buildLessThanOrEqualsPredicate(from, criteriaBuilder);
-      case CONTAINS -> buildInPredicate(from, criteriaBuilder);
+      case CONTAINS -> buildContainsPredicate(from, criteriaBuilder);
+      case IN -> buildInPredicate(from, criteriaBuilder);
     };
   }
 
   private <Z, X> Predicate buildInPredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    return criteriaValue
+        .getPredicateExpression(sqlDialect, from, criteriaBuilder)
+        .in(((List<?>) criteriaValue.value()).toArray(new Object[0]));
+  }
+
+  private <Z, X> Predicate buildContainsPredicate(
+      From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Expression<? extends Collection<T>> predicateExpression =
         (Expression<? extends Collection<T>>)
             criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);

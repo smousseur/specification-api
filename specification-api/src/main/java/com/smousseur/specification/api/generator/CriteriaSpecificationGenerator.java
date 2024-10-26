@@ -1,6 +1,6 @@
 package com.smousseur.specification.api.generator;
 
-import com.smousseur.specification.api.criteria.AbstractCriteria;
+import com.smousseur.specification.api.criteria.Criteria;
 import com.smousseur.specification.api.criteria.CriteriaJoin;
 import com.smousseur.specification.api.criteria.CriteriaType;
 import com.smousseur.specification.api.criteria.CriteriaValue;
@@ -16,12 +16,12 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public class CriteriaSpecificationGenerator<T> {
   /** The Criterias. */
-  private final List<AbstractCriteria> criterias;
+  private final List<Criteria> criterias;
 
   /** The Sql dialect. */
   private final String sqlDialect;
 
-  public CriteriaSpecificationGenerator(List<AbstractCriteria> criterias, String sqlDialect) {
+  public CriteriaSpecificationGenerator(List<Criteria> criterias, String sqlDialect) {
     this.criterias = criterias;
     this.sqlDialect = sqlDialect;
   }
@@ -38,7 +38,7 @@ public class CriteriaSpecificationGenerator<T> {
         (root, query, criteriaBuilder) -> {
           Join<Object, Object> currentJoin = null;
           List<Predicate> predicates = new ArrayList<>();
-          for (AbstractCriteria criteria : criterias) {
+          for (Criteria criteria : criterias) {
             if (criteria.criteriaType() == CriteriaType.JOIN) {
               CriteriaJoin node = (CriteriaJoin) criteria;
               currentJoin =

@@ -12,6 +12,7 @@ operator
     | '<'
     | '<='
     | 'contains'
+    | 'in'
     ;
 
 join
@@ -19,16 +20,16 @@ join
     ;
 
 path
-    : objectPath
-    | jsonPath
+    : property
+    | jsonProperty
     ;
 
-objectPath
-    : 'path(' IDENTIFIER (',' valueType)?')'
+property
+    : 'property(' IDENTIFIER ',' valueType ')'
     ;
 
-jsonPath
-    : 'json_path(' IDENTIFIER ',' IDENTIFIER (',' valueType)? (',' jsonOption)? ')'
+jsonProperty
+    : 'json_property(' IDENTIFIER ',' IDENTIFIER ',' valueType (',' jsonOption)? ')'
     ;
 
 jsonOption
@@ -45,6 +46,7 @@ valueType
     | 'long'
     | 'date'
     | 'datetime'
+    | 'list'
     ;
 
 fragment DIGIT: [0-9];

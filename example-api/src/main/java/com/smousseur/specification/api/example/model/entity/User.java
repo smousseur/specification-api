@@ -3,6 +3,7 @@ package com.smousseur.specification.api.example.model.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import lombok.Data;
 
 @Entity
@@ -39,6 +40,11 @@ public class User {
       joinColumns = @JoinColumn(name = "user_id"),
       inverseJoinColumns = @JoinColumn(name = "privilege_id"))
   private List<Privilege> privileges;
+
+  @ElementCollection
+  @CollectionTable(name = "user_aliases", joinColumns = @JoinColumn(name = "user_id"))
+  @Column(name = "name")
+  private Set<String> aliases;
 
   @OneToOne
   @JoinColumn(name = "id", referencedColumnName = "user_id")

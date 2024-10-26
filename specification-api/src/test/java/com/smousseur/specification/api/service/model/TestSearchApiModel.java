@@ -5,28 +5,28 @@ import com.smousseur.specification.api.annotation.SearchRequestObject;
 
 @SearchRequestObject
 public class TestSearchApiModel {
-  @SearchPath("path(name) like ?")
+  @SearchPath("property(name, string) like ?")
   private String name;
 
-  @SearchPath("path(country) = ?")
+  @SearchPath("property(country, string) = ?")
   private String country;
 
-  @SearchPath("path(active, bool) = ?")
+  @SearchPath("property(active, bool) = ?")
   private Boolean active;
 
-  @SearchPath("join(address)->path(latitude, long) = ?")
+  @SearchPath("join(address)->property(latitude, long) = ?")
   private Long latitude;
 
-  @SearchPath("join(address)->path(altitude, float) = ?")
+  @SearchPath("join(address)->property(altitude, float) = ?")
   private Float altitude;
 
-  @SearchPath("join(address)->path(id, int) = ?")
+  @SearchPath("join(address)->property(id, int) = ?")
   private Integer addressId;
 
-  @SearchPath("join(address)->path(street, string) = ?")
+  @SearchPath("join(address)->property(street, string) = ?")
   private String street;
 
-  @SearchPath("join(address)->path(temperature, double) = ?")
+  @SearchPath("join(address)->property(temperature, double) = ?")
   private Double temperature;
 
   public void setName(String name) {

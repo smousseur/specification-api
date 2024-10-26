@@ -11,8 +11,6 @@ It generates a JPA `Specification<T>` with all criterias given a request object.
 `SpecificationService` is the entry point of the specification generator. The generated `Specification<T>`
 can be used with `repository.findAll`.
 
-*Sample:*
-
 ``` java
 @Service
 class Service {
@@ -26,7 +24,6 @@ class Service {
 ## Configuration
 
 The `SpecificationService` bean only needs a `JdbcTemplate`
-*Sample:*
 
 ``` java
   @Bean
@@ -38,8 +35,6 @@ The `SpecificationService` bean only needs a `JdbcTemplate`
 ## The entity
 
 Define the entity with usual JPA annotation
-
-*Sample:*
 
 ``` java
 @Entity
@@ -59,8 +54,6 @@ This is the object containing all search parameters.
    This object typically comes from a HTTP request (request parameters or request body)
 2. Use the annotation `@SearchPath` for each field of the request object to be mapped into a JPA Criteria.
 
-*Sample:*
-
 ``` java
 @SearchRequestObject
 public record SearchRequest(@SearchPath("path(name) like ?") Integer entityId) {}
@@ -68,7 +61,7 @@ public record SearchRequest(@SearchPath("path(name) like ?") Integer entityId) {
 
 ### Syntax
 
-The `@SearchPath` annotation hold all informations to generate a JPA criteria.
+The `@SearchPath` annotation hold all information to generate a JPA criteria.
 These informations are a chain of operations to test a value with a field using a SQL `like` or `equal`.
 
 1. Join
@@ -81,7 +74,6 @@ These informations are a chain of operations to test a value with a field using 
 ### Validation
 
 There is an optional bean to validate all expressions set with `@SearchPath`
-*Sample:*
 
 ``` java
   @Bean

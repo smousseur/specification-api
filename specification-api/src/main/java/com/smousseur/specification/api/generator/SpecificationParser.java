@@ -1,10 +1,14 @@
 package com.smousseur.specification.api.generator;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smousseur.specification.api.antlr.ExpressionBaseVisitor;
 import com.smousseur.specification.api.antlr.ExpressionLexer;
 import com.smousseur.specification.api.antlr.ExpressionParser;
 import com.smousseur.specification.api.criteria.*;
-import com.smousseur.specification.api.criteria.AbstractCriteria;
+import com.smousseur.specification.api.criteria.Criteria;
+import com.smousseur.specification.api.exception.SpecificationException;
 import com.smousseur.specification.api.exception.SpecificationParseException;
 import com.smousseur.specification.api.util.Utils;
 import com.smousseur.specification.api.util.Wrapper;
@@ -17,8 +21,9 @@ import org.antlr.v4.runtime.*;
 
 /** The type Specification parser service. */
 public class SpecificationParser extends ExpressionBaseVisitor<Void> {
+  private static final ObjectMapper mapper = new ObjectMapper();
   private final String expression;
-  private final List<AbstractCriteria> criterias = new ArrayList<>();
+  private final List<Criteria> criterias = new ArrayList<>();
   private final Wrapper<CriteriaOperation> operation = new Wrapper<>();
   private final Wrapper<String> valueType = new Wrapper<>();
   private final Wrapper<String> jsonOption = new Wrapper<>();
@@ -34,7 +39,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
    *
    * @return the list
    */
-  public List<AbstractCriteria> parse() {
+  public List<Criteria> parse() {
     CharStream charStream = CharStreams.fromString(expression);
     ExpressionLexer lexer = new ExpressionLexer(charStream);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -65,15 +70,15 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   }
 
   @Override
-  public Void visitObjectPath(ExpressionParser.ObjectPathContext ctx) {
-    Void unused = super.visitObjectPath(ctx);
+  public Void visitProperty(ExpressionParser.PropertyContext ctx) {
+    Void unused = super.visitProperty(ctx);
     valuePath.setValue(ctx.IDENTIFIER().getText());
     return unused;
   }
 
   @Override
-  public Void visitJsonPath(ExpressionParser.JsonPathContext ctx) {
-    Void unused = super.visitJsonPath(ctx);
+  public Void visitJsonProperty(ExpressionParser.JsonPropertyContext ctx) {
+    Void unused = super.visitJsonProperty(ctx);
     valuePath.setValue(ctx.IDENTIFIER(0).getText());
     jsonValuePath.setValue(ctx.IDENTIFIER(1).getText());
     return unused;
@@ -99,84 +104,78 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
   }
 
   private CriteriaObjectValue<?> getCriteriaObjectValue(String value) {
-    CriteriaObjectValue<?> result;
     String valueClass = valueType.getValue();
 
-    if (valueClass != null) {
-      result =
-          switch (valueClass) {
-            case "string" -> getNewCriteriaObjectValue(value, String.class);
-            case "int" -> getNewCriteriaObjectValue(Integer.valueOf(value), Integer.class);
-            case "long" -> getNewCriteriaObjectValue(Long.valueOf(value), Long.class);
-            case "float" -> getNewCriteriaObjectValue(Float.valueOf(value), Float.class);
-            case "double" -> getNewCriteriaObjectValue(Double.valueOf(value), Double.class);
-            case "bool" -> getNewCriteriaObjectValue(Boolean.valueOf(value), Boolean.class);
-            case "date" -> getNewCriteriaObjectValue(LocalDate.parse(value), LocalDate.class);
-            case "datetime" ->
-                getNewCriteriaObjectValue(LocalDateTime.parse(value), LocalDateTime.class);
-            default -> throw new UnsupportedOperationException("Type not supported");
-          };
-    } else {
-      result = getNewCriteriaObjectValue(value, String.class);
-    }
-
-    return result;
+    return switch (valueClass) {
+      case "string" -> getNewCriteriaProperty(value, String.class);
+      case "int" -> getNewCriteriaProperty(Integer.valueOf(value), Integer.class);
+      case "long" -> getNewCriteriaProperty(Long.valueOf(value), Long.class);
+      case "float" -> getNewCriteriaProperty(Float.valueOf(value), Float.class);
+      case "double" -> getNewCriteriaProperty(Double.valueOf(value), Double.class);
+      case "bool" -> getNewCriteriaProperty(Boolean.valueOf(value), Boolean.class);
+      case "date" -> getNewCriteriaProperty(LocalDate.parse(value), LocalDate.class);
+      case "datetime" -> getNewCriteriaProperty(LocalDateTime.parse(value), LocalDateTime.class);
+      case "list" -> {
+        try {
+          yield getNewCriteriaProperty(
+              mapper.readValue(value, new TypeReference<List<?>>() {}), List.class);
+        } catch (JsonProcessingException e) {
+          throw new SpecificationException(
+              "Cannot deserialize list for property: " + valuePath.getValue(), e);
+        }
+      }
+      default -> throw new UnsupportedOperationException("Type not supported");
+    };
   }
 
   private CriteriaJsonValue<?> getCriteriaJsonValue(String value) {
-    CriteriaJsonValue<?> result;
     String valueClass = valueType.getValue();
-    CriteriaJsonColumnType columnType = getCriteriaJsonColumnType();
     String path = valuePath.getValue();
     String jsonPath = jsonValuePath.getValue();
-    CriteriaJsonValue<String> stringCriteriaJsonValue =
-        new CriteriaJsonValue<>(
-            path,
-            jsonPath,
-            columnType,
-            operation.getValue(),
-            CriteriaValueType.JSON_PROPERTY,
-            value,
-            String.class);
-    if (valueClass != null) {
-      result =
-          switch (valueClass) {
-            case "string" -> stringCriteriaJsonValue;
-            case "int" ->
-                getNewCriteriaJsonValue(
-                    path, jsonPath, operation.getValue(), Integer.valueOf(value), Integer.class);
-            case "long" ->
-                getNewCriteriaJsonValue(
-                    path, jsonPath, operation.getValue(), Long.valueOf(value), Long.class);
-            case "float" ->
-                getNewCriteriaJsonValue(
-                    path, jsonPath, operation.getValue(), Float.valueOf(value), Float.class);
-            case "double" ->
-                getNewCriteriaJsonValue(
-                    path, jsonPath, operation.getValue(), Double.valueOf(value), Double.class);
-            case "bool" ->
-                getNewCriteriaJsonValue(
-                    path, jsonPath, operation.getValue(), Boolean.valueOf(value), Boolean.class);
-            case "date" ->
-                getNewCriteriaJsonValue(
-                    path, jsonPath, operation.getValue(), LocalDate.parse(value), LocalDate.class);
-            case "datetime" ->
-                getNewCriteriaJsonValue(
-                    path,
-                    jsonPath,
-                    operation.getValue(),
-                    LocalDateTime.parse(value),
-                    LocalDateTime.class);
-            default -> throw new UnsupportedOperationException("Type not supported");
-          };
-    } else {
-      result = stringCriteriaJsonValue;
-    }
+    CriteriaOperation operationValue = operation.getValue();
 
-    return result;
+    return switch (valueClass) {
+      case "string" ->
+          getNewCriteriaJsonProperty(path, jsonPath, operationValue, value, String.class);
+      case "int" ->
+          getNewCriteriaJsonProperty(
+              path, jsonPath, operationValue, Integer.valueOf(value), Integer.class);
+      case "long" ->
+          getNewCriteriaJsonProperty(
+              path, jsonPath, operationValue, Long.valueOf(value), Long.class);
+      case "float" ->
+          getNewCriteriaJsonProperty(
+              path, jsonPath, operationValue, Float.valueOf(value), Float.class);
+      case "double" ->
+          getNewCriteriaJsonProperty(
+              path, jsonPath, operationValue, Double.valueOf(value), Double.class);
+      case "bool" ->
+          getNewCriteriaJsonProperty(
+              path, jsonPath, operationValue, Boolean.valueOf(value), Boolean.class);
+      case "date" ->
+          getNewCriteriaJsonProperty(
+              path, jsonPath, operationValue, LocalDate.parse(value), LocalDate.class);
+      case "datetime" ->
+          getNewCriteriaJsonProperty(
+              path, jsonPath, operationValue, LocalDateTime.parse(value), LocalDateTime.class);
+      case "list" -> {
+        try {
+          yield getNewCriteriaJsonProperty(
+              path,
+              jsonPath,
+              operationValue,
+              mapper.readValue(value, new TypeReference<List<?>>() {}),
+              List.class);
+        } catch (JsonProcessingException e) {
+          throw new SpecificationException(
+              "Cannot deserialize list for property: " + valuePath.getValue(), e);
+        }
+      }
+      default -> throw new UnsupportedOperationException("Type not supported");
+    };
   }
 
-  private <T> CriteriaJsonValue<T> getNewCriteriaJsonValue(
+  private <T> CriteriaJsonValue<T> getNewCriteriaJsonProperty(
       String field, String path, CriteriaOperation operation, T value, Class<T> type) {
     CriteriaJsonColumnType columnType = getCriteriaJsonColumnType();
     return new CriteriaJsonValue<>(
@@ -196,7 +195,7 @@ public class SpecificationParser extends ExpressionBaseVisitor<Void> {
         .orElse(CriteriaJsonColumnType.JSONB);
   }
 
-  private <T> CriteriaObjectValue<T> getNewCriteriaObjectValue(T value, Class<T> type) {
+  private <T> CriteriaObjectValue<T> getNewCriteriaProperty(T value, Class<T> type) {
     return new CriteriaObjectValue<>(
         valuePath.getValue(), operation.getValue(), CriteriaValueType.PROPERTY, value, type);
   }

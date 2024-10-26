@@ -17,8 +17,10 @@ public enum CriteriaOperation {
   GREATER_THAN_OR_EQUALS(">="),
   /** Less than or equals criteria value operation. */
   LESS_THAN_OR_EQUALS("<="),
+  /** Contains criteria operation. */
+  CONTAINS("contains"),
   /** In criteria operation. */
-  CONTAINS("contains");
+  IN("in");
 
   private final String value;
 
