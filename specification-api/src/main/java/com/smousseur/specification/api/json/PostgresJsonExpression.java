@@ -14,7 +14,8 @@ public class PostgresJsonExpression implements JsonExpression {
   private static final String JSONB_EXTRACT = "jsonb_extract_path_text";
 
   @Override
-  public <Z, X> Expression<?> getExpression(
+  @SuppressWarnings("unchecked")
+  public <T, Z, X> Expression<T> getExpression(
       CriteriaJsonValue criteriaJsonValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Expression<?>[] jsonParts =
         getJsonExpressionParts(
@@ -22,7 +23,7 @@ public class PostgresJsonExpression implements JsonExpression {
     String jsonExtractFunction = getJsonExtractFunction(criteriaJsonValue.columnType());
 
     return criteriaBuilder.function(
-        jsonExtractFunction, criteriaJsonValue.value().getClass(), jsonParts);
+        jsonExtractFunction, (Class<T>) criteriaJsonValue.value().getClass(), jsonParts);
   }
 
   private static <Z, X> Expression<?>[] getJsonExpressionParts(

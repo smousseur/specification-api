@@ -8,13 +8,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public interface JsonExpression {
-  <Z, X> Expression<?> getExpression(
+  <T, Z, X> Expression<T> getExpression(
       CriteriaJsonValue criteriaJsonValue, From<Z, X> from, CriteriaBuilder criteriaBuilder);
 
-  default <Z, X> Expression<?> getEvaluatedExpression(
+  @SuppressWarnings("unchecked")
+  default <T, Z, X> Expression<T> getEvaluatedExpression(
       CriteriaJsonValue criteriaJsonValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
-    Expression<?> result = getExpression(criteriaJsonValue, from, criteriaBuilder);
-    Class<?> valueClass = criteriaJsonValue.value().getClass();
+    Expression<T> result = getExpression(criteriaJsonValue, from, criteriaBuilder);
+    Class<T> valueClass = (Class<T>) criteriaJsonValue.value().getClass();
     if (valueClass.equals(LocalDate.class) || valueClass.equals(LocalDateTime.class)) {
       result = result.as(valueClass);
     }

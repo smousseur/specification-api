@@ -65,8 +65,7 @@ public class CriteriaPredicateGenerator {
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
     Expression<? extends Comparable> predicateExpression =
-        (Expression<? extends Comparable>)
-            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.lessThanOrEqualTo(predicateExpression, value);
   }
 
@@ -74,8 +73,7 @@ public class CriteriaPredicateGenerator {
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
     Expression<? extends Comparable> predicateExpression =
-        (Expression<? extends Comparable>)
-            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.greaterThanOrEqualTo(predicateExpression, value);
   }
 
@@ -83,8 +81,7 @@ public class CriteriaPredicateGenerator {
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
     Expression<? extends Comparable> predicateExpression =
-        (Expression<? extends Comparable>)
-            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.lessThan(predicateExpression, value);
   }
 
@@ -92,8 +89,7 @@ public class CriteriaPredicateGenerator {
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Comparable<? super Comparable> value = (Comparable) criteriaValue.value();
     Expression<? extends Comparable> predicateExpression =
-        (Expression<? extends Comparable>)
-            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.greaterThan(predicateExpression, value);
   }
 
@@ -101,8 +97,7 @@ public class CriteriaPredicateGenerator {
     String value = String.valueOf(criteriaValue.value());
     final String likeValue = Utils.wrap(value, "%");
     Expression<String> predicateExpression =
-        (Expression<String>)
-            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.like(predicateExpression, likeValue);
   }
 

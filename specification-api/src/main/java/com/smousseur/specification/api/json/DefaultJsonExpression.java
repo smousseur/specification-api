@@ -9,11 +9,12 @@ public class DefaultJsonExpression implements JsonExpression {
   private static final String JSON_VALUE = "json_value";
 
   @Override
-  public <Z, X> Expression<?> getExpression(
+  @SuppressWarnings("unchecked")
+  public <T, Z, X> Expression<T> getExpression(
       CriteriaJsonValue criteriaValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     return criteriaBuilder.function(
         JSON_VALUE,
-        criteriaValue.value().getClass(),
+        (Class<T>) criteriaValue.value().getClass(),
         from.get(criteriaValue.path()),
         criteriaBuilder.literal(getNormalizedJsonPath(criteriaValue.jsonPath())));
   }

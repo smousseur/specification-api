@@ -29,7 +29,7 @@ public interface CriteriaValue extends Criteria {
    */
   Object value();
 
-  <Z, X> Expression<?> getPredicateExpression(
+  <T, Z, X> Expression<T> getPredicateExpression(
       String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder);
 
   @Override

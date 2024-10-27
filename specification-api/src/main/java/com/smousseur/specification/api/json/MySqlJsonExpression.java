@@ -10,9 +10,10 @@ public class MySqlJsonExpression implements JsonExpression {
   private static final String JSON_UNQUOTE = "json_unquote";
 
   @Override
-  public <Z, X> Expression<?> getExpression(
+  @SuppressWarnings("unchecked")
+  public <T, Z, X> Expression<T> getExpression(
       CriteriaJsonValue criteriaJsonValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
-    Class<?> valueClass = criteriaJsonValue.value().getClass();
+    Class<T> valueClass = (Class<T>) criteriaJsonValue.value().getClass();
     Expression<?> jsonExtract =
         criteriaBuilder.function(
             JSON_EXTRACT,

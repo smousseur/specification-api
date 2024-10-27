@@ -8,7 +8,7 @@ public record CriteriaObjectValue(
     String path, CriteriaOperation operation, CriteriaValueType type, Object value)
     implements CriteriaValue {
   @Override
-  public <Z, X> Expression<?> getPredicateExpression(
+  public <T, Z, X> Expression<T> getPredicateExpression(
       String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     return from.get(path);
   }

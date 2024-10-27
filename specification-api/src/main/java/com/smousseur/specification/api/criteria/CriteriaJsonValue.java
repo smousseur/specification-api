@@ -18,7 +18,7 @@ public record CriteriaJsonValue(
     CriteriaValueType type,
     Object value)
     implements CriteriaValue {
-  public <Z, X> Expression<?> getPredicateExpression(
+  public <T, Z, X> Expression<T> getPredicateExpression(
       String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     JsonExpression jsonExtractService = getJsonExtractService(sqlDialect);
     return jsonExtractService.getEvaluatedExpression(this, from, criteriaBuilder);
