@@ -4,11 +4,11 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 
-public record CriteriaObjectValue<T>(
-    String path, CriteriaOperation operation, CriteriaValueType type, T value, Class<T> classz)
-    implements CriteriaValue<T> {
+public record CriteriaObjectValue(
+    String path, CriteriaOperation operation, CriteriaValueType type, Object value)
+    implements CriteriaValue {
   @Override
-  public <Z, X> Expression<T> getPredicateExpression(
+  public <Z, X> Expression<?> getPredicateExpression(
       String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     return from.get(path);
   }

@@ -9,19 +9,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class PostgresJsonExpression<T> implements JsonExpression<T> {
+public class PostgresJsonExpression implements JsonExpression {
   private static final String JSON_EXTRACT = "json_extract_path_text";
   private static final String JSONB_EXTRACT = "jsonb_extract_path_text";
 
   @Override
-  public <Z, X> Expression<T> getExpression(
-      CriteriaJsonValue<T> criteriaJsonValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+  public <Z, X> Expression<?> getExpression(
+      CriteriaJsonValue criteriaJsonValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Expression<?>[] jsonParts =
         getJsonExpressionParts(
             from, criteriaBuilder, criteriaJsonValue.path(), criteriaJsonValue.jsonPath());
     String jsonExtractFunction = getJsonExtractFunction(criteriaJsonValue.columnType());
 
-    return criteriaBuilder.function(jsonExtractFunction, criteriaJsonValue.classz(), jsonParts);
+    return criteriaBuilder.function(
+        jsonExtractFunction, criteriaJsonValue.value().getClass(), jsonParts);
   }
 
   private static <Z, X> Expression<?>[] getJsonExpressionParts(

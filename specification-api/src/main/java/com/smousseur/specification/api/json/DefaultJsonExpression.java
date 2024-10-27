@@ -5,15 +5,15 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 
-public class DefaultJsonExpression<T> implements JsonExpression<T> {
+public class DefaultJsonExpression implements JsonExpression {
   private static final String JSON_VALUE = "json_value";
 
   @Override
-  public <Z, X> Expression<T> getExpression(
-      CriteriaJsonValue<T> criteriaValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+  public <Z, X> Expression<?> getExpression(
+      CriteriaJsonValue criteriaValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     return criteriaBuilder.function(
         JSON_VALUE,
-        criteriaValue.classz(),
+        criteriaValue.value().getClass(),
         from.get(criteriaValue.path()),
         criteriaBuilder.literal(getNormalizedJsonPath(criteriaValue.jsonPath())));
   }

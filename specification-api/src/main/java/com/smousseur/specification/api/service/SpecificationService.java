@@ -1,7 +1,5 @@
 package com.smousseur.specification.api.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smousseur.specification.api.annotation.SearchPath;
 import com.smousseur.specification.api.criteria.Criteria;
 import com.smousseur.specification.api.exception.SpecificationException;
@@ -14,14 +12,13 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.util.Pair;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.util.ReflectionUtils;
 
 /** The type Specification service. */
 public class SpecificationService {
-  private static final ObjectMapper mapper = new ObjectMapper();
-
   private final String sqlDialect;
 
   public SpecificationService(JdbcTemplate jdbcTemplate) {
@@ -41,7 +38,7 @@ public class SpecificationService {
    */
   public <T, R> Specification<T> generateSpecification(R searchRequest) {
     Class<?> searchRequestClass = searchRequest.getClass();
-    List<String> requestSpecs = new ArrayList<>();
+    List<Pair<String, Object>> requestSpecs = new ArrayList<>();
     ReflectionUtils.doWithFields(
         searchRequestClass,
         field -> processField(field, searchRequest, requestSpecs),
@@ -49,37 +46,27 @@ public class SpecificationService {
     return generateSpecification(requestSpecs);
   }
 
-  private <T> Specification<T> generateSpecification(List<String> requestSpecs) {
+  private <T> Specification<T> generateSpecification(List<Pair<String, Object>> requestSpecs) {
     List<Criteria> criterias =
         requestSpecs.stream()
-            .map(spec -> new SpecificationParser(spec).parse())
+            .map(spec -> new SpecificationParser(spec.getFirst(), spec.getSecond()).parse())
             .flatMap(List::stream)
             .toList();
     return new CriteriaSpecificationGenerator<T>(criterias, this.sqlDialect)
         .generateSpecification();
   }
 
-  private static <R> void processField(Field field, R searchRequest, List<String> requestSpecs) {
+  private static <R> void processField(
+      Field field, R searchRequest, List<Pair<String, Object>> requestSpecs) {
     Optional.ofNullable(Utils.callGetterForField(field, searchRequest))
         .map(value -> mapPath(field, value))
         .ifPresent(requestSpecs::add);
   }
 
-  private static String mapPath(Field field, Object value) {
-    String annotationPath =
-        Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class))
-            .map(SearchPath::value)
-            .orElseThrow(() -> new SpecificationException("Cannot get search annotation"));
-    Object objValue = value;
-    if (objValue instanceof List<?>) {
-      try {
-        objValue = mapper.writeValueAsString(objValue);
-      } catch (JsonProcessingException e) {
-        throw new SpecificationException(
-            "Cannot deserialize list for property: " + field.getName(), e);
-      }
-    }
-    return annotationPath.replace("?", "\"" + objValue + "\"");
+  private static Pair<String, Object> mapPath(Field field, Object value) {
+    return Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class))
+        .map(pathAnnotation -> Pair.of(pathAnnotation.value(), value))
+        .orElseThrow(() -> new SpecificationException("Cannot get search annotation"));
   }
 
   private static boolean filterFieldsWithSearchPath(Field field) {

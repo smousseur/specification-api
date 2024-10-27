@@ -44,9 +44,9 @@ public class CriteriaSpecificationGenerator<T> {
               currentJoin =
                   currentJoin == null ? root.join(node.path()) : currentJoin.join(node.path());
             } else if (criteria.criteriaType() == CriteriaType.VALUE) {
-              CriteriaValue<?> value = (CriteriaValue<?>) criteria;
-              CriteriaPredicateGenerator<?> criteriaPredicateGenerator =
-                  new CriteriaPredicateGenerator<>(value, sqlDialect);
+              CriteriaValue value = (CriteriaValue) criteria;
+              CriteriaPredicateGenerator criteriaPredicateGenerator =
+                  new CriteriaPredicateGenerator(value, sqlDialect);
               From<?, ?> from = currentJoin != null ? currentJoin : root;
               predicates.add(criteriaPredicateGenerator.generatePredicate(from, criteriaBuilder));
               currentJoin = null;

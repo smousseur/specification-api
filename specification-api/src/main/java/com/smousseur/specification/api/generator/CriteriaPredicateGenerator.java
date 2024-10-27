@@ -10,20 +10,16 @@ import jakarta.persistence.criteria.Predicate;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * The type Criteria predicate generator.
- *
- * @param <T> the type parameter
- */
+/** The type Criteria predicate generator. */
 @SuppressWarnings({"unchecked", "rawtypes"})
-public class CriteriaPredicateGenerator<T> {
+public class CriteriaPredicateGenerator {
   /** The Criteria value. */
-  private final CriteriaValue<T> criteriaValue;
+  private final CriteriaValue criteriaValue;
 
   /** The Sql dialect. */
   private final String sqlDialect;
 
-  public CriteriaPredicateGenerator(CriteriaValue<T> criteriaValue, String sqlDialect) {
+  public CriteriaPredicateGenerator(CriteriaValue criteriaValue, String sqlDialect) {
     this.criteriaValue = criteriaValue;
     this.sqlDialect = sqlDialect;
   }
@@ -59,10 +55,10 @@ public class CriteriaPredicateGenerator<T> {
 
   private <Z, X> Predicate buildContainsPredicate(
       From<Z, X> from, CriteriaBuilder criteriaBuilder) {
-    Expression<? extends Collection<T>> predicateExpression =
-        (Expression<? extends Collection<T>>)
-            criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
-    return criteriaBuilder.isMember(criteriaValue.value(), predicateExpression);
+    Expression<?> predicateExpression =
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
+    return criteriaBuilder.isMember(
+        criteriaValue.value(), (Expression<? extends Collection<Object>>) predicateExpression);
   }
 
   private <Z, X> Predicate buildLessThanOrEqualsPredicate(

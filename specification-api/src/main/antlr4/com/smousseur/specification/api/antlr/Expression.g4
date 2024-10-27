@@ -25,28 +25,16 @@ path
     ;
 
 property
-    : 'property(' IDENTIFIER ',' valueType ')'
+    : 'property(' IDENTIFIER ')'
     ;
 
 jsonProperty
-    : 'json_property(' IDENTIFIER ',' IDENTIFIER ',' valueType (',' jsonOption)? ')'
+    : 'json_property(' IDENTIFIER ',' IDENTIFIER (',' jsonOption)? ')'
     ;
 
 jsonOption
     : 'json'
     | 'jsonb'
-    ;
-
-valueType
-    : 'string'
-    | 'int'
-    | 'float'
-    | 'double'
-    | 'bool'
-    | 'long'
-    | 'date'
-    | 'datetime'
-    | 'list'
     ;
 
 fragment DIGIT: [0-9];

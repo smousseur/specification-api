@@ -4,12 +4,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 
-/**
- * The interface Criteria value.
- *
- * @param <T> the type parameter
- */
-public interface CriteriaValue<T> extends Criteria {
+/** The interface Criteria value. */
+public interface CriteriaValue extends Criteria {
   String path();
 
   /**
@@ -31,16 +27,9 @@ public interface CriteriaValue<T> extends Criteria {
    *
    * @return the t
    */
-  T value();
+  Object value();
 
-  /**
-   * Classz class.
-   *
-   * @return the class
-   */
-  Class<T> classz();
-
-  <Z, X> Expression<T> getPredicateExpression(
+  <Z, X> Expression<?> getPredicateExpression(
       String sqlDialect, From<Z, X> from, CriteriaBuilder criteriaBuilder);
 
   @Override

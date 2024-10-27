@@ -12,18 +12,6 @@ public final class Utils {
   }
 
   /**
-   * Replace last string.
-   *
-   * @param str the str
-   * @param target the old char
-   * @param replacement the new char
-   * @return the string
-   */
-  public static String replaceLast(String str, String target, String replacement) {
-    return str.replaceFirst("(?s)(.*)" + target, "$1" + replacement);
-  }
-
-  /**
    * Wrap string.
    *
    * @param value the value

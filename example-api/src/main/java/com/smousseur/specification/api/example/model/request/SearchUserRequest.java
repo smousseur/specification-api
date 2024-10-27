@@ -20,10 +20,10 @@ import java.util.List;
  */
 @SearchRequestObject
 public record SearchUserRequest(
-    @SearchPath("property(name, string) like ?") String name,
-    @SearchPath("join(address)->json_property(location, coord.x, int) = ?") Integer lattitude,
-    @SearchPath("join(address)->json_property(location, street, string) like ?") String street,
-    @SearchPath("property(lastConnection, datetime) >= ?") LocalDateTime lastConnection,
-    @SearchPath("join(address)->json_property(location, lastVisit, date) < ?") LocalDate lastVisit,
-    @SearchPath("property(aliases, string) contains ?") String alias,
-    @SearchPath("join(address)->property(city, list) in ?") List<String> cities) {}
+    @SearchPath("property(name) like ?") String name,
+    @SearchPath("join(address)->json_property(location, coord.x) = ?") Integer lattitude,
+    @SearchPath("join(address)->json_property(location, street) like ?") String street,
+    @SearchPath("property(lastConnection) >= ?") LocalDateTime lastConnection,
+    @SearchPath("join(address)->json_property(location, lastVisit) < ?") LocalDate lastVisit,
+    @SearchPath("property(aliases) contains ?") String alias,
+    @SearchPath("join(address)->property(city) in ?") List<String> cities) {}
