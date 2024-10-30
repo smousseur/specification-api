@@ -1,9 +1,9 @@
 package com.smousseur.specification.api.service;
 
-import com.smousseur.specification.api.annotation.SearchPath;
-import com.smousseur.specification.api.annotation.SearchRequestObject;
-import com.smousseur.specification.api.antlr.ExpressionLexer;
-import com.smousseur.specification.api.antlr.ExpressionParser;
+import com.smousseur.specification.api.annotation.PredicateDef;
+import com.smousseur.specification.api.annotation.SpecificationDef;
+import com.smousseur.specification.api.antlr.CriteriaLexer;
+import com.smousseur.specification.api.antlr.CriteriaParser;
 import com.smousseur.specification.api.exception.SpecificationException;
 import com.smousseur.specification.api.exception.SpecificationParseException;
 import jakarta.annotation.PostConstruct;
@@ -41,7 +41,7 @@ public abstract class SpecificationValidationService {
   private void validatePackage(String packageToValidate) {
     ClassPathScanningCandidateComponentProvider scanner =
         new ClassPathScanningCandidateComponentProvider(false);
-    TypeFilter annotationFilter = new AnnotationTypeFilter(SearchRequestObject.class);
+    TypeFilter annotationFilter = new AnnotationTypeFilter(SpecificationDef.class);
     scanner.addIncludeFilter(annotationFilter);
     scanner.setResourceLoader(new PathMatchingResourcePatternResolver(resourceLoader));
     Set<Class<?>> searchClasses = new HashSet<>();
@@ -64,16 +64,16 @@ public abstract class SpecificationValidationService {
     ReflectionUtils.doWithFields(
         searchClass,
         field -> validateField(searchClass, field),
-        field -> AnnotationUtils.getAnnotation(field, SearchPath.class) != null);
+        field -> AnnotationUtils.getAnnotation(field, PredicateDef.class) != null);
   }
 
   private void validateField(Class<?> searchClass, Field field) {
-    SearchPath annotationSearch =
-        Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class)).orElseThrow();
+    PredicateDef annotationSearch =
+        Optional.ofNullable(AnnotationUtils.getAnnotation(field, PredicateDef.class)).orElseThrow();
     CharStream charStream = CharStreams.fromString(annotationSearch.value());
-    ExpressionLexer lexer = new ExpressionLexer(charStream);
+    CriteriaLexer lexer = new CriteriaLexer(charStream);
     CommonTokenStream tokens = new CommonTokenStream(lexer);
-    ExpressionParser parser = new ExpressionParser(tokens);
+    CriteriaParser parser = new CriteriaParser(tokens);
     parser.addErrorListener(
         new BaseErrorListener() {
           @Override
@@ -89,6 +89,6 @@ public abstract class SpecificationValidationService {
                 searchClass.getName(), field.getName(), msg);
           }
         });
-    parser.expression();
+    parser.criteria();
   }
 }

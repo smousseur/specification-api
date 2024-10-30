@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.From;
 
 /** The type Criteria json value. */
 public record CriteriaJsonValue(
+    String id,
     String path,
     String jsonPath,
     CriteriaJsonColumnType columnType,

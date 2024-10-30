@@ -84,10 +84,6 @@
                 <version>${antlr.version}</version>
                 <configuration>
                     <visitor>true</visitor>
-                    <arguments>
-                        <argument>-package</argument>
-                        <argument>com.smousseur.specification.api.antlr</argument>
-                    </arguments>
                 </configuration>
                 <executions>
                     <execution>

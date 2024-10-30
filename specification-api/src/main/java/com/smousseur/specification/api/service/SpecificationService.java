@@ -1,10 +1,11 @@
 package com.smousseur.specification.api.service;
 
-import com.smousseur.specification.api.annotation.SearchPath;
+import com.smousseur.specification.api.annotation.PredicateDef;
+import com.smousseur.specification.api.annotation.SpecificationDef;
 import com.smousseur.specification.api.criteria.Criteria;
 import com.smousseur.specification.api.exception.SpecificationException;
 import com.smousseur.specification.api.generator.CriteriaSpecificationGenerator;
-import com.smousseur.specification.api.generator.SpecificationParser;
+import com.smousseur.specification.api.parser.CriteriaExpressionParser;
 import com.smousseur.specification.api.util.Utils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -38,38 +39,56 @@ public class SpecificationService {
    */
   public <T, R> Specification<T> generateSpecification(R searchRequest) {
     Class<?> searchRequestClass = searchRequest.getClass();
-    List<Pair<String, Object>> requestSpecs = new ArrayList<>();
+    List<Pair<String, Pair<String, Object>>> requestSpecs = new ArrayList<>();
     ReflectionUtils.doWithFields(
         searchRequestClass,
         field -> processField(field, searchRequest, requestSpecs),
         SpecificationService::filterFieldsWithSearchPath);
-    return generateSpecification(requestSpecs);
+    String specificationExp =
+        Optional.ofNullable(searchRequestClass.getAnnotation(SpecificationDef.class))
+            .map(SpecificationDef::value)
+            .orElse(null);
+    return generateSpecification(requestSpecs, specificationExp);
   }
 
-  private <T> Specification<T> generateSpecification(List<Pair<String, Object>> requestSpecs) {
+  private <T> Specification<T> generateSpecification(
+      List<Pair<String, Pair<String, Object>>> requestSpecs, String specificationExp) {
     List<Criteria> criterias =
         requestSpecs.stream()
-            .map(spec -> new SpecificationParser(spec.getFirst(), spec.getSecond()).parse())
+            .map(
+                spec ->
+                    new CriteriaExpressionParser(
+                            spec.getFirst(),
+                            spec.getSecond().getFirst(),
+                            spec.getSecond().getSecond())
+                        .parse())
             .flatMap(List::stream)
             .toList();
-    return new CriteriaSpecificationGenerator<T>(criterias, this.sqlDialect)
+    return new CriteriaSpecificationGenerator<T>(criterias, specificationExp, this.sqlDialect)
         .generateSpecification();
   }
 
   private static <R> void processField(
-      Field field, R searchRequest, List<Pair<String, Object>> requestSpecs) {
+      Field field, R searchRequest, List<Pair<String, Pair<String, Object>>> requestSpecs) {
     Optional.ofNullable(Utils.callGetterForField(field, searchRequest))
         .map(value -> mapPath(field, value))
         .ifPresent(requestSpecs::add);
   }
 
-  private static Pair<String, Object> mapPath(Field field, Object value) {
-    return Optional.ofNullable(AnnotationUtils.getAnnotation(field, SearchPath.class))
-        .map(pathAnnotation -> Pair.of(pathAnnotation.value(), value))
+  private static Pair<String, Pair<String, Object>> mapPath(Field field, Object value) {
+    return Optional.ofNullable(AnnotationUtils.getAnnotation(field, PredicateDef.class))
+        .map(
+            pathAnnotation -> {
+              String id =
+                  !pathAnnotation.id().isBlank()
+                      ? pathAnnotation.id()
+                      : "default_" + field.getName();
+              return Pair.of(id, Pair.of(pathAnnotation.value(), value));
+            })
         .orElseThrow(() -> new SpecificationException("Cannot get search annotation"));
   }
 
   private static boolean filterFieldsWithSearchPath(Field field) {
-    return AnnotationUtils.getAnnotation(field, SearchPath.class) != null;
+    return AnnotationUtils.getAnnotation(field, PredicateDef.class) != null;
   }
 }

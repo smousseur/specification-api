@@ -1,32 +1,32 @@
 package com.smousseur.specification.api.service.model;
 
-import com.smousseur.specification.api.annotation.SearchPath;
-import com.smousseur.specification.api.annotation.SearchRequestObject;
+import com.smousseur.specification.api.annotation.PredicateDef;
+import com.smousseur.specification.api.annotation.SpecificationDef;
 
-@SearchRequestObject
+@SpecificationDef
 public class TestSearchApiModel {
-  @SearchPath("property(name) like ?")
+  @PredicateDef("property(name) like ?")
   private String name;
 
-  @SearchPath("property(country) = ?")
+  @PredicateDef("property(country) = ?")
   private String country;
 
-  @SearchPath("property(active) = ?")
+  @PredicateDef("property(active) = ?")
   private Boolean active;
 
-  @SearchPath("join(address)->property(latitude) = ?")
+  @PredicateDef("join(address)->property(latitude) = ?")
   private Long latitude;
 
-  @SearchPath("join(address)->property(altitude) = ?")
+  @PredicateDef("join(address)->property(altitude) = ?")
   private Float altitude;
 
-  @SearchPath("join(address)->property(id) = ?")
+  @PredicateDef("join(address)->property(id) = ?")
   private Integer addressId;
 
-  @SearchPath("join(address)->property(street) = ?")
+  @PredicateDef("join(address)->property(street) = ?")
   private String street;
 
-  @SearchPath("join(address)->property(temperature) = ?")
+  @PredicateDef("join(address)->property(temperature) = ?")
   private Double temperature;
 
   public void setName(String name) {
