@@ -63,7 +63,7 @@ class SpecificationServiceTest {
   @Test
   void testFindWithJoin() {
     TestSearchApiModel searchModel = new TestSearchApiModel();
-    searchModel.setLatitude(10L);
+    searchModel.setLatitude(100L);
     searchModel.setAltitude(30.56f);
     Specification<TestSearchApiUser> specification =
         specificationService.generateSpecification(searchModel);

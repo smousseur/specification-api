@@ -14,7 +14,7 @@ public class TestSearchApiModel {
   @PredicateDef("property(active) = ?")
   private Boolean active;
 
-  @PredicateDef("join(address)->property(latitude) = ?")
+  @PredicateDef("join(address)->property(latitude) != ?")
   private Long latitude;
 
   @PredicateDef("join(address)->property(altitude) = ?")
