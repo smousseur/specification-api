@@ -20,7 +20,11 @@ public enum CriteriaOperation {
   /** Contains criteria operation. */
   CONTAINS("contains"),
   /** In criteria operation. */
-  IN("in");
+  IN("in"),
+  /** Isnull criteria operation. */
+  ISNULL("isnull"),
+  /** Isnotnull criteria operation. */
+  ISNOTNULL("isnotnull");
 
   private final String value;
 

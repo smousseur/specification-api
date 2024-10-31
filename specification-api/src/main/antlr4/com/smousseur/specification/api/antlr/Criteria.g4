@@ -2,6 +2,7 @@ grammar Criteria;
 
 criteria
     : (join '->')* path operator VALUE
+    | (join '->')* path unaryOperator
     ;
 
 operator
@@ -13,6 +14,11 @@ operator
     | '<='
     | 'contains'
     | 'in'
+    ;
+
+unaryOperator
+    : 'isnull'
+    | 'isnotnull'
     ;
 
 join

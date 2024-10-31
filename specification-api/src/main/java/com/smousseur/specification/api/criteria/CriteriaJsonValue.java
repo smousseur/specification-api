@@ -1,6 +1,6 @@
 package com.smousseur.specification.api.criteria;
 
-import com.smousseur.specification.api.exception.SpecificationException;
+import com.smousseur.specification.api.exception.SpecificationProcessingException;
 import com.smousseur.specification.api.json.DefaultJsonExpression;
 import com.smousseur.specification.api.json.JsonExpression;
 import com.smousseur.specification.api.json.MySqlJsonExpression;
@@ -31,7 +31,8 @@ public record CriteriaJsonValue(
       case "PostgreSQL" -> new PostgresJsonExpression();
       case "Oracle", "Microsoft SQL Server" -> new DefaultJsonExpression();
       default ->
-          throw new SpecificationException(sqlDialect + " is not supported to extract json fields");
+          throw new SpecificationProcessingException(
+              sqlDialect + " is not supported to extract json fields");
     };
   }
 }

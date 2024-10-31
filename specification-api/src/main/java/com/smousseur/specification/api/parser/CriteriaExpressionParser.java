@@ -89,6 +89,12 @@ public class CriteriaExpressionParser extends CriteriaBaseVisitor<Void> {
   }
 
   @Override
+  public Void visitUnaryOperator(CriteriaParser.UnaryOperatorContext ctx) {
+    operation.setValue(CriteriaOperation.fromOperator(ctx.getText()));
+    return super.visitUnaryOperator(ctx);
+  }
+
+  @Override
   public Void visitJsonOption(CriteriaParser.JsonOptionContext ctx) {
     jsonOption.setValue(ctx.getText());
     return super.visitJsonOption(ctx);

@@ -6,8 +6,6 @@ import jakarta.persistence.criteria.From;
 
 /** The interface Criteria value. */
 public interface CriteriaValue extends Criteria {
-  String path();
-
   /**
    * Operation criteria value operation.
    *

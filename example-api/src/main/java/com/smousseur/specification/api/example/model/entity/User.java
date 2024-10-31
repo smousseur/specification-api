@@ -27,6 +27,9 @@ public class User {
   @Column(name = "last_connection")
   private LocalDateTime lastConnection;
 
+  @Column(name = "city")
+  private String city;
+
   @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
   @JoinTable(
       name = "users_role",

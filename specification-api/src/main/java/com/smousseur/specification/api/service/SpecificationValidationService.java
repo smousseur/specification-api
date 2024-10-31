@@ -4,8 +4,8 @@ import com.smousseur.specification.api.annotation.PredicateDef;
 import com.smousseur.specification.api.annotation.SpecificationDef;
 import com.smousseur.specification.api.antlr.CriteriaLexer;
 import com.smousseur.specification.api.antlr.CriteriaParser;
-import com.smousseur.specification.api.exception.SpecificationException;
 import com.smousseur.specification.api.exception.SpecificationParseException;
+import com.smousseur.specification.api.exception.SpecificationProcessingException;
 import jakarta.annotation.PostConstruct;
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -54,7 +54,7 @@ public abstract class SpecificationValidationService {
                 className = beanDefinition.getBeanClassName();
                 searchClasses.add(Class.forName(className));
               } catch (ClassNotFoundException e) {
-                throw new SpecificationException("Cannot get class: " + className, e);
+                throw new SpecificationProcessingException("Cannot get class: " + className, e);
               }
             });
     searchClasses.forEach(this::validateClass);

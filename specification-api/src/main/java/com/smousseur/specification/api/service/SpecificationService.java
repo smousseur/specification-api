@@ -1,9 +1,10 @@
 package com.smousseur.specification.api.service;
 
 import com.smousseur.specification.api.annotation.PredicateDef;
+import com.smousseur.specification.api.annotation.PredicateId;
 import com.smousseur.specification.api.annotation.SpecificationDef;
 import com.smousseur.specification.api.criteria.Criteria;
-import com.smousseur.specification.api.exception.SpecificationException;
+import com.smousseur.specification.api.exception.SpecificationProcessingException;
 import com.smousseur.specification.api.generator.CriteriaSpecificationGenerator;
 import com.smousseur.specification.api.parser.CriteriaExpressionParser;
 import com.smousseur.specification.api.util.Utils;
@@ -43,7 +44,7 @@ public class SpecificationService {
     ReflectionUtils.doWithFields(
         searchRequestClass,
         field -> processField(field, searchRequest, requestSpecs),
-        SpecificationService::filterFieldsWithSearchPath);
+        SpecificationService::filterFieldsWithPredicate);
     String specificationExp =
         Optional.ofNullable(searchRequestClass.getAnnotation(SpecificationDef.class))
             .map(SpecificationDef::value)
@@ -72,23 +73,33 @@ public class SpecificationService {
       Field field, R searchRequest, List<Pair<String, Pair<String, Object>>> requestSpecs) {
     Optional.ofNullable(Utils.callGetterForField(field, searchRequest))
         .map(value -> mapPath(field, value))
-        .ifPresent(requestSpecs::add);
+        .ifPresentOrElse(
+            requestSpecs::add,
+            () -> {
+              if (field.getType().equals(Void.class)) {
+                requestSpecs.add(mapPath(field, new Object()));
+              }
+            });
   }
 
   private static Pair<String, Pair<String, Object>> mapPath(Field field, Object value) {
     return Optional.ofNullable(AnnotationUtils.getAnnotation(field, PredicateDef.class))
         .map(
             pathAnnotation -> {
-              String id =
-                  !pathAnnotation.id().isBlank()
-                      ? pathAnnotation.id()
-                      : "default_" + field.getName();
+              String id = getPredicateId(field);
               return Pair.of(id, Pair.of(pathAnnotation.value(), value));
             })
-        .orElseThrow(() -> new SpecificationException("Cannot get search annotation"));
+        .orElseThrow(() -> new SpecificationProcessingException("Cannot get search annotation"));
   }
 
-  private static boolean filterFieldsWithSearchPath(Field field) {
+  private static String getPredicateId(Field field) {
+    return Optional.ofNullable(AnnotationUtils.getAnnotation(field, PredicateId.class))
+        .map(PredicateId::value)
+        .filter(id -> !id.isBlank())
+        .orElse("default_" + field.getName());
+  }
+
+  private static boolean filterFieldsWithPredicate(Field field) {
     return AnnotationUtils.getAnnotation(field, PredicateDef.class) != null;
   }
 }

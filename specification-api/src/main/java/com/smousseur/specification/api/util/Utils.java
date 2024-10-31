@@ -1,6 +1,6 @@
 package com.smousseur.specification.api.util;
 
-import com.smousseur.specification.api.exception.SpecificationException;
+import com.smousseur.specification.api.exception.SpecificationProcessingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.springframework.util.ReflectionUtils;
@@ -61,7 +61,7 @@ public final class Utils {
       getter = ReflectionUtils.findMethod(objectClass, getterName);
     }
     if (getter == null) {
-      throw new SpecificationException(
+      throw new SpecificationProcessingException(
           String.format(
               "Cannot get getter method for field %s and class %s",
               fieldName, objectClass.getName()));

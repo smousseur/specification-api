@@ -5,6 +5,7 @@ import com.smousseur.specification.api.antlr.SpecificationLexer;
 import com.smousseur.specification.api.antlr.SpecificationParser;
 import com.smousseur.specification.api.exception.SpecificationParseException;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +36,7 @@ public class SpecificationExpressionParser extends SpecificationBaseVisitor<Void
     SpecificationParser parser = new SpecificationParser(tokens);
     SpecificationParser.SpecificationContext specification = parser.specification();
     this.visit(specification);
-    if (currentPredicates.size() > 1) {
+    if (currentPredicates.size() != 1) {
       throw new SpecificationParseException("Bad specification expression");
     }
     return currentPredicates.get(0);
@@ -46,18 +47,17 @@ public class SpecificationExpressionParser extends SpecificationBaseVisitor<Void
     Void unused = super.visitAndPredicateCxt(ctx);
     List<ParseTree> idNodes = getIdNodes(ctx);
     if (idNodes.isEmpty()) {
-      Predicate orSpec = criteriaBuilder.and(currentPredicates.toArray(new Predicate[0]));
+      Predicate orSpec = and(currentPredicates.toArray(new Predicate[0]));
       currentPredicates.clear();
       currentPredicates.add(orSpec);
     } else if (idNodes.size() == 1) {
-      Predicate allSpecs = criteriaBuilder.and(currentPredicates.toArray(new Predicate[0]));
-      Predicate orSpec = criteriaBuilder.and(getPredicate(idNodes.get(0).getText()), allSpecs);
+      Predicate allSpecs = and(currentPredicates.toArray(new Predicate[0]));
+      Predicate orSpec = and(getPredicate(idNodes.get(0).getText()), allSpecs);
       currentPredicates.clear();
       currentPredicates.add(orSpec);
     } else if (idNodes.size() == 2) {
       Predicate orSpec =
-          criteriaBuilder.and(
-              getPredicate(idNodes.get(0).getText()), getPredicate(idNodes.get(1).getText()));
+          and(getPredicate(idNodes.get(0).getText()), getPredicate(idNodes.get(1).getText()));
       currentPredicates.add(orSpec);
     }
     return unused;
@@ -68,22 +68,37 @@ public class SpecificationExpressionParser extends SpecificationBaseVisitor<Void
     Void unused = super.visitOrPredicateCxt(ctx);
     List<ParseTree> idNodes = getIdNodes(ctx);
     if (idNodes.isEmpty()) {
-      Predicate orSpec = criteriaBuilder.or(currentPredicates.toArray(new Predicate[0]));
+      Predicate orSpec = or(currentPredicates.toArray(new Predicate[0]));
       currentPredicates.clear();
       currentPredicates.add(orSpec);
     } else if (idNodes.size() == 1) {
-      Predicate allSpecs = criteriaBuilder.or(currentPredicates.toArray(new Predicate[0]));
-      Predicate orSpec = criteriaBuilder.or(getPredicate(idNodes.get(0).getText()), allSpecs);
+      Predicate allSpecs = or(currentPredicates.toArray(new Predicate[0]));
+      Predicate orSpec = or(getPredicate(idNodes.get(0).getText()), allSpecs);
       currentPredicates.clear();
       currentPredicates.add(orSpec);
     } else if (idNodes.size() == 2) {
       Predicate orSpec =
-          criteriaBuilder.or(
-              getPredicate(idNodes.get(0).getText()), getPredicate(idNodes.get(1).getText()));
+          or(getPredicate(idNodes.get(0).getText()), getPredicate(idNodes.get(1).getText()));
       currentPredicates.add(orSpec);
     }
 
     return unused;
+  }
+
+  protected Predicate and(Predicate... restrictions) {
+    return Optional.ofNullable(criteriaBuilder).map(cb -> cb.and(restrictions)).orElse(null);
+  }
+
+  protected Predicate and(Expression<Boolean> x, Expression<Boolean> y) {
+    return Optional.ofNullable(criteriaBuilder).map(cb -> cb.and(x, y)).orElse(null);
+  }
+
+  protected Predicate or(Predicate... restrictions) {
+    return Optional.ofNullable(criteriaBuilder).map(cb -> cb.or(restrictions)).orElse(null);
+  }
+
+  protected Predicate or(Expression<Boolean> x, Expression<Boolean> y) {
+    return Optional.ofNullable(criteriaBuilder).map(cb -> cb.or(x, y)).orElse(null);
   }
 
   private List<ParseTree> getIdNodes(SpecificationParser.PredicateContext ctx) {
@@ -98,7 +113,7 @@ public class SpecificationExpressionParser extends SpecificationBaseVisitor<Void
     return results;
   }
 
-  public Predicate getPredicate(String predicateId) {
+  private Predicate getPredicate(String predicateId) {
     return Optional.ofNullable(predicates.get(predicateId))
         .orElseThrow(
             () -> new SpecificationParseException("Cannot find predicate with id: " + predicateId));

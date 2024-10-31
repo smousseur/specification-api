@@ -44,7 +44,18 @@ public class CriteriaPredicateGenerator {
       case LESS_THAN_OR_EQUALS -> buildLessThanOrEqualsPredicate(from, criteriaBuilder);
       case CONTAINS -> buildContainsPredicate(from, criteriaBuilder);
       case IN -> buildInPredicate(from, criteriaBuilder);
+      case ISNULL -> buildIsNullPredicate(from, criteriaBuilder);
+      case ISNOTNULL -> buildIsNotNullPredicate(from, criteriaBuilder);
     };
+  }
+
+  private <Z, X> Predicate buildIsNotNullPredicate(
+      From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    return criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder).isNotNull();
+  }
+
+  private <Z, X> Predicate buildIsNullPredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    return criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder).isNull();
   }
 
   private <Z, X> Predicate buildInPredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
