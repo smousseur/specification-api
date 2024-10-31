@@ -7,6 +7,15 @@ import jakarta.persistence.criteria.From;
 /** The interface Criteria value. */
 public interface CriteriaValue extends Criteria {
   /**
+   * Id string.
+   *
+   * @return the string
+   */
+  default String id() {
+    return "";
+  }
+
+  /**
    * Operation criteria value operation.
    *
    * @return the criteria value operation
