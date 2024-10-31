@@ -37,6 +37,7 @@ public class CriteriaPredicateGenerator {
     CriteriaOperation operation = criteriaValue.operation();
     return switch (operation) {
       case EQUALS -> buildEqualPredicate(from, criteriaBuilder);
+      case NOT_EQUALS -> buildNotEqualPredicate(from, criteriaBuilder);
       case LIKE -> buildLikePredicate(from, criteriaBuilder);
       case GREATER_THAN -> buildGreaterThanPredicate(from, criteriaBuilder);
       case LESS_THAN -> buildLessThanPredicate(from, criteriaBuilder);
@@ -106,7 +107,7 @@ public class CriteriaPredicateGenerator {
 
   private <Z, X> Predicate buildLikePredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     String value = String.valueOf(criteriaValue.value());
-    final String likeValue = Utils.wrap(value, "%");
+    final String likeValue = value.contains("%") ? value : Utils.wrap(value, "%");
     Expression<String> predicateExpression =
         criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder);
     return criteriaBuilder.like(predicateExpression, likeValue);
@@ -114,6 +115,13 @@ public class CriteriaPredicateGenerator {
 
   private <Z, X> Predicate buildEqualPredicate(From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     return criteriaBuilder.equal(
+        criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder),
+        criteriaValue.value());
+  }
+
+  private <Z, X> Predicate buildNotEqualPredicate(
+      From<Z, X> from, CriteriaBuilder criteriaBuilder) {
+    return criteriaBuilder.notEqual(
         criteriaValue.getPredicateExpression(sqlDialect, from, criteriaBuilder),
         criteriaValue.value());
   }

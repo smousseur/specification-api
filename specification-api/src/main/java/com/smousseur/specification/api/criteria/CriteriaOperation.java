@@ -7,6 +7,8 @@ import java.util.Arrays;
 public enum CriteriaOperation {
   /** Equals criteria value operation. */
   EQUALS("="),
+  /** Not equals criteria operation. */
+  NOT_EQUALS("!="),
   /** Like criteria value operation. */
   LIKE("like"),
   /** Greater than criteria value operation. */

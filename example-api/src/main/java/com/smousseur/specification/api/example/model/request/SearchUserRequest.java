@@ -43,4 +43,7 @@ public class SearchUserRequest {
   @PredicateId("pCity")
   @PredicateDef("property(city) isnull")
   private Void city;
+
+  @PredicateDef("property(email) != ?")
+  private String email;
 }

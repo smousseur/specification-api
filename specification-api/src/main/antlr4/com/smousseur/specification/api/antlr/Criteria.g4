@@ -7,6 +7,7 @@ criteria
 
 operator
     : '='
+    | '!='
     | 'like'
     | '>'
     | '>='
@@ -55,8 +56,7 @@ IDENTIFIER
     ;
 
 VALUE
-    : '"' ~[\u007F]+ '"'
-    | QUESTION_MARK
+    : QUESTION_MARK
     ;
 
 WS
