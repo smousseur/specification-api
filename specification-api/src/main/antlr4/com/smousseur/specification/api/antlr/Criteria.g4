@@ -28,6 +28,7 @@ join
 
 joinProperty
     : 'fetch'
+    | 'right'
     | 'left'
     ;
 
@@ -38,10 +39,12 @@ path
 
 property
     : 'property(' IDENTIFIER ')'
+    | 'prop(' IDENTIFIER ')'
     ;
 
 jsonProperty
     : 'json_property(' IDENTIFIER ',' IDENTIFIER (',' jsonOption)? ')'
+    | 'json(' IDENTIFIER ',' IDENTIFIER (',' jsonOption)? ')'
     ;
 
 jsonOption

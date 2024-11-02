@@ -76,6 +76,7 @@ public class CriteriaSpecificationGenerator<T> {
     return switch (option) {
       case NONE -> root.join(node.path());
       case LEFT -> root.join(node.path(), JoinType.LEFT);
+      case RIGHT -> root.join(node.path(), JoinType.RIGHT);
       case FETCH -> (Join<Object, Object>) root.fetch(node.path());
     };
   }
@@ -86,6 +87,7 @@ public class CriteriaSpecificationGenerator<T> {
     return switch (option) {
       case NONE -> join.join(node.path());
       case LEFT -> join.join(node.path(), JoinType.LEFT);
+      case RIGHT -> join.join(node.path(), JoinType.RIGHT);
       case FETCH -> (Join<Object, Object>) join.fetch(node.path());
     };
   }

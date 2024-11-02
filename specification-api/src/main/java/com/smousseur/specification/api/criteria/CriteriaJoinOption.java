@@ -3,7 +3,8 @@ package com.smousseur.specification.api.criteria;
 public enum CriteriaJoinOption {
   NONE("none"),
   FETCH("fetch"),
-  LEFT("left");
+  LEFT("left"),
+  RIGHT("right");
 
   private final String value;
 
