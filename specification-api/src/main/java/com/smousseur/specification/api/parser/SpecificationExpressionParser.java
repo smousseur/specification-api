@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -45,59 +48,55 @@ public class SpecificationExpressionParser extends SpecificationBaseVisitor<Void
   @Override
   public Void visitAndPredicateCxt(SpecificationParser.AndPredicateCxtContext ctx) {
     Void unused = super.visitAndPredicateCxt(ctx);
-    List<ParseTree> idNodes = getIdNodes(ctx);
-    if (idNodes.isEmpty()) {
-      Predicate orSpec = and(currentPredicates.toArray(new Predicate[0]));
-      currentPredicates.clear();
-      currentPredicates.add(orSpec);
-    } else if (idNodes.size() == 1) {
-      Predicate allSpecs = and(currentPredicates.toArray(new Predicate[0]));
-      Predicate orSpec = and(getPredicate(idNodes.get(0).getText()), allSpecs);
-      currentPredicates.clear();
-      currentPredicates.add(orSpec);
-    } else if (idNodes.size() == 2) {
-      Predicate orSpec =
-          and(getPredicate(idNodes.get(0).getText()), getPredicate(idNodes.get(1).getText()));
-      currentPredicates.add(orSpec);
-    }
+    generatePredicate(ctx, this::andPredicates, this::andExpressions, criteriaBuilder::conjunction);
     return unused;
   }
 
   @Override
   public Void visitOrPredicateCxt(SpecificationParser.OrPredicateCxtContext ctx) {
     Void unused = super.visitOrPredicateCxt(ctx);
+    generatePredicate(ctx, this::orPredicates, this::orExpressions, criteriaBuilder::disjunction);
+    return unused;
+  }
+
+  private void generatePredicate(
+      SpecificationParser.PredicateContext ctx,
+      Function<Predicate[], Predicate> predicateOperator,
+      BiFunction<Expression<Boolean>, Expression<Boolean>, Predicate> expressionOperator,
+      Supplier<Predicate> neutral) {
     List<ParseTree> idNodes = getIdNodes(ctx);
     if (idNodes.isEmpty()) {
-      Predicate orSpec = or(currentPredicates.toArray(new Predicate[0]));
+      Predicate orSpec = predicateOperator.apply(currentPredicates.toArray(new Predicate[0]));
       currentPredicates.clear();
       currentPredicates.add(orSpec);
     } else if (idNodes.size() == 1) {
-      Predicate allSpecs = or(currentPredicates.toArray(new Predicate[0]));
-      Predicate orSpec = or(getPredicate(idNodes.get(0).getText()), allSpecs);
+      Predicate allSpecs = predicateOperator.apply(currentPredicates.toArray(new Predicate[0]));
+      Predicate orSpec =
+          expressionOperator.apply(getPredicate(idNodes.get(0).getText(), neutral), allSpecs);
       currentPredicates.clear();
       currentPredicates.add(orSpec);
     } else if (idNodes.size() == 2) {
       Predicate orSpec =
-          or(getPredicate(idNodes.get(0).getText()), getPredicate(idNodes.get(1).getText()));
+          expressionOperator.apply(
+              getPredicate(idNodes.get(0).getText(), neutral),
+              getPredicate(idNodes.get(1).getText(), neutral));
       currentPredicates.add(orSpec);
     }
-
-    return unused;
   }
 
-  protected Predicate and(Predicate... restrictions) {
+  protected Predicate andPredicates(Predicate... restrictions) {
     return Optional.ofNullable(criteriaBuilder).map(cb -> cb.and(restrictions)).orElse(null);
   }
 
-  protected Predicate and(Expression<Boolean> x, Expression<Boolean> y) {
+  protected Predicate andExpressions(Expression<Boolean> x, Expression<Boolean> y) {
     return Optional.ofNullable(criteriaBuilder).map(cb -> cb.and(x, y)).orElse(null);
   }
 
-  protected Predicate or(Predicate... restrictions) {
+  protected Predicate orPredicates(Predicate... restrictions) {
     return Optional.ofNullable(criteriaBuilder).map(cb -> cb.or(restrictions)).orElse(null);
   }
 
-  protected Predicate or(Expression<Boolean> x, Expression<Boolean> y) {
+  protected Predicate orExpressions(Expression<Boolean> x, Expression<Boolean> y) {
     return Optional.ofNullable(criteriaBuilder).map(cb -> cb.or(x, y)).orElse(null);
   }
 
@@ -113,7 +112,7 @@ public class SpecificationExpressionParser extends SpecificationBaseVisitor<Void
     return results;
   }
 
-  private Predicate getPredicate(String predicateId) {
-    return Optional.ofNullable(predicates.get(predicateId)).orElseGet(criteriaBuilder::disjunction);
+  private Predicate getPredicate(String predicateId, Supplier<Predicate> neutral) {
+    return Optional.ofNullable(predicates.get(predicateId)).orElseGet(neutral);
   }
 }
