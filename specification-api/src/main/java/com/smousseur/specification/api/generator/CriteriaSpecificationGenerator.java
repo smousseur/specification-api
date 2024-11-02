@@ -1,9 +1,6 @@
 package com.smousseur.specification.api.generator;
 
-import com.smousseur.specification.api.criteria.Criteria;
-import com.smousseur.specification.api.criteria.CriteriaJoin;
-import com.smousseur.specification.api.criteria.CriteriaType;
-import com.smousseur.specification.api.criteria.CriteriaValue;
+import com.smousseur.specification.api.criteria.*;
 import com.smousseur.specification.api.parser.SpecificationExpressionParser;
 import jakarta.persistence.criteria.*;
 import java.util.*;
@@ -66,10 +63,31 @@ public class CriteriaSpecificationGenerator<T> {
     if (join != null) {
       currentJoin = join;
     } else {
-      currentJoin = currentJoin == null ? root.join(node.path()) : currentJoin.join(node.path());
+      currentJoin =
+          currentJoin == null ? createRootJoin(root, node) : createNextJoin(currentJoin, node);
       joins.put(node.path(), currentJoin);
     }
     return currentJoin;
+  }
+
+  @SuppressWarnings("unchecked")
+  private Join<Object, Object> createRootJoin(Root<T> root, CriteriaJoin node) {
+    CriteriaJoinOption option = node.option() == null ? CriteriaJoinOption.NONE : node.option();
+    return switch (option) {
+      case NONE -> root.join(node.path());
+      case LEFT -> root.join(node.path(), JoinType.LEFT);
+      case FETCH -> (Join<Object, Object>) root.fetch(node.path());
+    };
+  }
+
+  @SuppressWarnings("unchecked")
+  private Join<Object, Object> createNextJoin(Join<Object, Object> join, CriteriaJoin node) {
+    CriteriaJoinOption option = node.option() == null ? CriteriaJoinOption.NONE : node.option();
+    return switch (option) {
+      case NONE -> join.join(node.path());
+      case LEFT -> join.join(node.path(), JoinType.LEFT);
+      case FETCH -> (Join<Object, Object>) join.fetch(node.path());
+    };
   }
 
   private Predicate computePredicate(

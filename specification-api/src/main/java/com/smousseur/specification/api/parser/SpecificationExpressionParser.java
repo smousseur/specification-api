@@ -114,8 +114,6 @@ public class SpecificationExpressionParser extends SpecificationBaseVisitor<Void
   }
 
   private Predicate getPredicate(String predicateId) {
-    return Optional.ofNullable(predicates.get(predicateId))
-        .orElseThrow(
-            () -> new SpecificationParseException("Cannot find predicate with id: " + predicateId));
+    return Optional.ofNullable(predicates.get(predicateId)).orElseGet(criteriaBuilder::disjunction);
   }
 }

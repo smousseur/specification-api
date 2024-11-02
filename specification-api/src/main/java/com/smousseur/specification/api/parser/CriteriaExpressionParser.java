@@ -8,6 +8,7 @@ import com.smousseur.specification.api.criteria.Criteria;
 import com.smousseur.specification.api.exception.SpecificationParseException;
 import com.smousseur.specification.api.util.Wrapper;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.antlr.v4.runtime.*;
@@ -22,6 +23,7 @@ public class CriteriaExpressionParser extends CriteriaBaseVisitor<Void> {
   private final Wrapper<String> jsonOption = new Wrapper<>();
   private final Wrapper<String> valuePath = new Wrapper<>();
   private final Wrapper<String> jsonValuePath = new Wrapper<>();
+  private final Wrapper<CriteriaJoinOption> joinOption = new Wrapper<>();
 
   public CriteriaExpressionParser(String criteriaId, String expression, Object value) {
     this.expression = expression;
@@ -63,8 +65,9 @@ public class CriteriaExpressionParser extends CriteriaBaseVisitor<Void> {
 
   @Override
   public Void visitJoin(CriteriaParser.JoinContext ctx) {
-    criterias.add(new CriteriaJoin(ctx.IDENTIFIER().getText()));
-    return super.visitJoin(ctx);
+    Void unused = super.visitJoin(ctx);
+    criterias.add(new CriteriaJoin(ctx.IDENTIFIER().getText(), joinOption.getValue()));
+    return unused;
   }
 
   @Override
@@ -98,6 +101,16 @@ public class CriteriaExpressionParser extends CriteriaBaseVisitor<Void> {
   public Void visitJsonOption(CriteriaParser.JsonOptionContext ctx) {
     jsonOption.setValue(ctx.getText());
     return super.visitJsonOption(ctx);
+  }
+
+  @Override
+  public Void visitJoinProperty(CriteriaParser.JoinPropertyContext ctx) {
+    joinOption.setValue(
+        Arrays.stream(CriteriaJoinOption.values())
+            .filter(opt -> opt.getValue().equals(ctx.getText()))
+            .findFirst()
+            .orElse(CriteriaJoinOption.NONE));
+    return super.visitJoinProperty(ctx);
   }
 
   private CriteriaJsonValue getCriteriaJsonValue() {

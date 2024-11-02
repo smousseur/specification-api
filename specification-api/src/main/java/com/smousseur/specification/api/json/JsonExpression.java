@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.From;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 public interface JsonExpression {
   <T, Z, X> Expression<T> getExpression(
@@ -16,7 +17,9 @@ public interface JsonExpression {
       CriteriaJsonValue criteriaJsonValue, From<Z, X> from, CriteriaBuilder criteriaBuilder) {
     Expression<T> result = getExpression(criteriaJsonValue, from, criteriaBuilder);
     Class<T> valueClass = (Class<T>) criteriaJsonValue.value().getClass();
-    if (valueClass.equals(LocalDate.class) || valueClass.equals(LocalDateTime.class)) {
+    if (valueClass.equals(LocalDate.class)
+        || valueClass.equals(LocalDateTime.class)
+        || valueClass.equals(Date.class)) {
       result = result.as(valueClass);
     }
 

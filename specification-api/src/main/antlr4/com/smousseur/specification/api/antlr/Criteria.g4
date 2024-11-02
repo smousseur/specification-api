@@ -23,7 +23,12 @@ unaryOperator
     ;
 
 join
-    : 'join(' IDENTIFIER ')'
+    : 'join(' IDENTIFIER (',' joinProperty)? ')'
+    ;
+
+joinProperty
+    : 'fetch'
+    | 'left'
     ;
 
 path
