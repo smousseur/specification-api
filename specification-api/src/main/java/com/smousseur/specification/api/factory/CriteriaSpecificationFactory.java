@@ -1,4 +1,4 @@
-package com.smousseur.specification.api.generator;
+package com.smousseur.specification.api.factory;
 
 import com.smousseur.specification.api.criteria.*;
 import com.smousseur.specification.api.parser.SpecificationExpressionParser;
@@ -7,22 +7,23 @@ import java.util.*;
 import org.springframework.data.jpa.domain.Specification;
 
 /**
- * The type Criteria specification generator.
+ * The type Criteria specification factory.
  *
  * @param <T> the type parameter
  */
-public class CriteriaSpecificationGenerator<T> {
+public class CriteriaSpecificationFactory<T> {
   /** The Criterias. */
   private final List<Criteria> criterias;
 
   /** The Sql dialect. */
   private final String sqlDialect;
 
+  /** The Specification exp. */
   private final String specificationExp;
 
   private final Map<String, Join<Object, Object>> joins = new HashMap<>();
 
-  public CriteriaSpecificationGenerator(
+  public CriteriaSpecificationFactory(
       List<Criteria> criterias, String specificationExp, String sqlDialect) {
     this.criterias = criterias;
     this.sqlDialect = sqlDialect;
@@ -30,11 +31,11 @@ public class CriteriaSpecificationGenerator<T> {
   }
 
   /**
-   * Generate specification specification.
+   * Create specification specification.
    *
    * @return the specification
    */
-  public Specification<T> generateSpecification() {
+  public Specification<T> createSpecification() {
     Map<String, Predicate> predicateMap = new HashMap<>();
     return (root, query, criteriaBuilder) -> {
       Join<Object, Object> currentJoin = null;
@@ -44,10 +45,10 @@ public class CriteriaSpecificationGenerator<T> {
           currentJoin = getCurrentJoin(root, currentJoin, node);
         } else if (criteria.criteriaType() == CriteriaType.VALUE) {
           CriteriaValue value = (CriteriaValue) criteria;
-          CriteriaPredicateGenerator criteriaPredicateGenerator =
-              new CriteriaPredicateGenerator(value, sqlDialect);
+          CriteriaPredicateFactory criteriaPredicateFactory =
+              new CriteriaPredicateFactory(value, sqlDialect);
           From<?, ?> from = currentJoin != null ? currentJoin : root;
-          Predicate predicate = criteriaPredicateGenerator.generatePredicate(from, criteriaBuilder);
+          Predicate predicate = criteriaPredicateFactory.createPredicate(from, criteriaBuilder);
           predicateMap.put(value.id(), predicate);
           currentJoin = null;
         }

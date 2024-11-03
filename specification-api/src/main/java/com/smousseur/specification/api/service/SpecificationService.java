@@ -5,7 +5,7 @@ import com.smousseur.specification.api.annotation.PredicateId;
 import com.smousseur.specification.api.annotation.SpecificationDef;
 import com.smousseur.specification.api.criteria.Criteria;
 import com.smousseur.specification.api.exception.SpecificationProcessingException;
-import com.smousseur.specification.api.generator.CriteriaSpecificationGenerator;
+import com.smousseur.specification.api.factory.CriteriaSpecificationFactory;
 import com.smousseur.specification.api.parser.CriteriaExpressionParser;
 import com.smousseur.specification.api.util.Utils;
 import java.lang.reflect.Field;
@@ -65,8 +65,8 @@ public class SpecificationService {
                         .parse())
             .flatMap(List::stream)
             .toList();
-    return new CriteriaSpecificationGenerator<T>(criterias, specificationExp, this.sqlDialect)
-        .generateSpecification();
+    return new CriteriaSpecificationFactory<T>(criterias, specificationExp, this.sqlDialect)
+        .createSpecification();
   }
 
   private static <R> void processField(
